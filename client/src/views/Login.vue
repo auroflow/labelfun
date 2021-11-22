@@ -111,6 +111,8 @@ export default {
               type: 'error',
               text: err.response.data.error,
             })
+            this.password = ''
+            this.$v.$reset()
           } else {
             this.$store.dispatch('message/push', {
               type: 'error',
@@ -129,8 +131,8 @@ export default {
     },
     password: {
       required,
-      minLength: minLength(6),
-      maxLength: maxLength(16),
+      minLength: minLength(8),
+      maxLength: maxLength(32),
     },
   },
 }

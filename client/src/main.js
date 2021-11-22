@@ -8,6 +8,7 @@ import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
 import './assets/styles/nprogress.css'
 import Vuelidate from 'vuelidate'
+import axios from 'axios'
 
 Vue.use(Vuelidate)
 
@@ -47,6 +48,22 @@ requireComponent.keys().forEach((fileName) => {
 Vue.config.productionTip = false
 
 new Vue({
+  created() {
+    const userString = localStorage.getItem('user')
+    if (userString) {
+      const userData = JSON.parse(userString)
+      this.$store.commit('user/SET_USER_DATA', userData)
+    }
+    axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response.status === 401) {
+          this.$store.dispatch('logout')
+        }
+        return Promise.reject(error)
+      }
+    )
+  },
   vuetify,
   router,
   store,
