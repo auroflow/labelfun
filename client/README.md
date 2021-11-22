@@ -1,4 +1,4 @@
-# labelfun
+# vue-template
 
 ## Project setup
 ```
