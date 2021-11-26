@@ -62,7 +62,6 @@
 <script>
 import { email, required, minLength, maxLength } from 'vuelidate/lib/validators'
 import { validationMixin } from 'vuelidate'
-import * as argon2 from 'argon2-browser/dist/argon2-bundled.min.js'
 import NProgress from 'nprogress'
 
 export default {
@@ -110,31 +109,27 @@ export default {
       }
     },
     signup() {
-      argon2
-        .hash({
-          pass: this.password,
-          salt: this.email,
-          type: argon2.ArgonType.Argon2id,
-        })
-        .then((pwdhash) => {
-          return this.$store.dispatch('user/signup', {
-            name: this.name,
-            email: this.email,
-            pwdhash: pwdhash.encoded,
-          })
+      this.$store
+        .dispatch('user/signup', {
+          name: this.name,
+          email: this.email,
+          password: this.password,
         })
         .then(() => {
           this.$store.dispatch('message/push', {
             type: 'success',
-            text: '注册成功。',
+            text: '注册成功，请登录。',
           })
-          this.$router.push({ name: 'home' })
+          this.$router.push({ name: 'login' })
         })
         .catch((err) => {
-          if (err.response && err.response.data.error) {
+          if (err.response && err.response.data.message) {
             this.$store.dispatch('message/push', {
               type: 'error',
-              text: err.response.data.error,
+              text:
+                err.response.data.message === 'duplicated_email'
+                  ? '该邮箱已注册。'
+                  : err.response.data.message,
             })
           } else {
             this.$store.dispatch('message/push', {

@@ -14,9 +14,12 @@ export default {
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
   },
   login(user) {
-    return apiClient.post('/auth/login', user)
+    return apiClient.post('/api/auth/login', {
+      grant_type: 'password',
+      ...user,
+    })
   },
   signup(newUser) {
-    return apiClient.post('/auth/register', newUser)
+    return apiClient.post('/api/users', newUser)
   },
 }

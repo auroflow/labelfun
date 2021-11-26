@@ -6,9 +6,10 @@ export const namespaced = true
 export const state = {
   // The current logged-in user. Format (when not null):
   // {
-  //   id: 1
-  //   name: 'Justin Liu'
-  //   email: 'my@email.com'
+  //   id: 1,
+  //   name: 'Justin Liu',
+  //   email: 'my@email.com',
+  //   type: 'user',
   // }
   current: null,
 }
@@ -31,10 +32,9 @@ export const actions = {
       commit('SET_USER_DATA', data)
     })
   },
-  signup({ commit }, credentials) {
-    return APIService.signup(credentials).then(({ data }) => {
-      commit('SET_USER_DATA', data)
-    })
+  // eslint-disable-next-line no-empty-pattern
+  signup({}, credentials) {
+    return APIService.signup(credentials)
   },
   logout({ commit, dispatch }) {
     commit('CLEAR_USER_DATA')

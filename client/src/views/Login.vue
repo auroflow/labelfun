@@ -44,7 +44,6 @@
 <script>
 import { email, required, minLength, maxLength } from 'vuelidate/lib/validators'
 import { validationMixin } from 'vuelidate'
-import * as argon2 from 'argon2-browser/dist/argon2-bundled.min.js'
 import NProgress from 'nprogress'
 
 export default {
@@ -86,17 +85,11 @@ export default {
     },
     login() {
       NProgress.start()
-      argon2
-        .hash({
-          pass: this.password,
-          salt: this.email,
-          type: argon2.ArgonType.Argon2id,
-        })
-        .then((pwdhash) => {
-          return this.$store.dispatch('user/login', {
-            email: this.email,
-            pwdhash: pwdhash.encoded,
-          })
+
+      this.$store
+        .dispatch('user/login', {
+          email: this.email,
+          password: this.password,
         })
         .then(() => {
           this.$store.dispatch('message/push', {
@@ -106,10 +99,13 @@ export default {
           this.$router.push({ name: 'home' })
         })
         .catch((err) => {
-          if (err.response && err.response.data.error) {
+          if (err.response && err.response.data.message) {
             this.$store.dispatch('message/push', {
               type: 'error',
-              text: err.response.data.error,
+              text:
+                err.response.data.message === 'incorrect_email_or_password'
+                  ? '邮箱或密码错误。'
+                  : err.response.data.message,
             })
             this.password = ''
             this.$v.$reset()
