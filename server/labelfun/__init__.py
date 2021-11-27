@@ -5,8 +5,7 @@ from apiflask import APIFlask
 from labelfun.settings import config
 from labelfun.apis import api_bp
 from labelfun.extensions import db
-from labelfun.models.user import User
-from passlib.hash import argon2
+from labelfun.models import User
 
 
 def create_app(config_name=None):
@@ -47,12 +46,16 @@ def register_commands(app: APIFlask):
     @app.cli.command()
     def fakedb():
         """Fake users."""
-        user = User(id=1001, name="Justin Liu", email="imbiansl@live.cn",
-                    pwdhash=argon2.hash('12345678'), type="user")
-        admin = User(id=2001, name='Amy Admin', pwdhash=argon2.hash('abcdefgh'),
-                     email='amyadmin@live.cn', type='admin')
+        user = User(id=1001, name='User', password='12345678',
+                    email='user@email.com', type='user')
+        user2 = User(id=1002, name='New User', password=r'!@#$%^&*',
+                     email='newuser@email.com', type='user')
+        admin = User(id=2001, name='Admin', password='abcdefgh',
+                     email='admin@email.com', type='admin')
+
         db.drop_all()
         db.create_all()
         db.session.add(user)
+        db.session.add(user2)
         db.session.add(admin)
         db.session.commit()

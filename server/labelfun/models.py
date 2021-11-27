@@ -13,8 +13,16 @@ class User(db.Model):
     pwdhash = db.Column(db.String)
     type = db.Column(db.String)
 
+    def __init__(self, password=None, **kwargs):
+        super(User, self).__init__(**kwargs)
+        if password is not None:
+            self.set_password(password)
+
     def __str__(self):
         return self.name
+
+    def set_password(self, password):
+        self.pwdhash = argon2.hash(password)
 
     def check_password(self, password):
         return argon2.verify(password, self.pwdhash)

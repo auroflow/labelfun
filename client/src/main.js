@@ -58,7 +58,11 @@ new Vue({
       (response) => response,
       (error) => {
         if (error.response.status === 401) {
-          this.$store.dispatch('logout')
+          this.$store.dispatch('user/logout')
+          this.$store.dispatch('message/push', {
+            text: '登录失效，请重新登录。',
+            type: 'error',
+          })
         }
         return Promise.reject(error)
       }

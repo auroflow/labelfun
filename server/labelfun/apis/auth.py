@@ -1,31 +1,13 @@
 from functools import wraps
-from apiflask import APIBlueprint, Schema, input, output, abort
-from apiflask.fields import String, Email, Integer
-from apiflask.validators import Length
+from apiflask import APIBlueprint, input, output, abort
 from flask import current_app, g, request
 from flask.views import MethodView
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
-from passlib.hash import argon2
-from labelfun.models.user import User
-from labelfun.extensions import db
+from labelfun.models import User
+from labelfun.schemas import LoginInSchema, LoginOutSchema
+
 
 auth_bp = APIBlueprint('auth', __name__)
-
-
-class LoginInSchema(Schema):
-    grant_type = String(required=True)
-    email = Email(required=True)
-    password = String(validate=Length(8, 32), required=True)
-
-
-class LoginOutSchema(Schema):
-    id = Integer()
-    email = Email()
-    name = String()
-    type = String()
-    access_token = String()
-    expires_in = Integer()
-    token_type = String()
 
 
 def generate_token(user):
@@ -50,7 +32,7 @@ class Login(MethodView):
 
         user = User.query.filter_by(email=email).first()
         if user is None or not user.check_password(password):
-            abort(400, 'incorrect_email_or_password')
+            abort(400, 'INCORRECT_EMAIL_OR_PASSWORD')
 
         token, expiration = generate_token(user)
 
@@ -107,7 +89,7 @@ def auth_required(admin=False):
                         'WWW-Authenticate': 'Bearer'
                     })
                 if not validate_token(token):
-                    abort(401, '令牌无效或已过期。', headers={
+                    abort(401, 'INVALID_TOKEN', headers={
                         'WWW-Authenticate': 'Bearer'
                     })
                 if admin and g.current_user.type != 'admin':
