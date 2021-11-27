@@ -13,13 +13,19 @@ export default {
   setAuth(token) {
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
   },
+  clearAuth() {
+    delete apiClient.defaults.headers.common['Authorization']
+  },
   login(user) {
     return apiClient.post('/api/auth/login', {
       grant_type: 'password',
       ...user,
     })
   },
-  signup(newUser) {
+  userCreate(newUser) {
     return apiClient.post('/api/users', newUser)
+  },
+  userUpdate(info) {
+    return apiClient.patch('/api/users/' + info.id, info.data)
   },
 }

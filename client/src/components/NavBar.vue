@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar app color="primary" dark>
+  <v-app-bar app clipped-left color="primary" dark>
     <v-toolbar-title class="mr-5">{{ name }}</v-toolbar-title>
     <v-btn
       v-for="link in linksPermitted"
@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 
 export default {
   props: ['name'],
@@ -32,8 +32,8 @@ export default {
         ? this.links.filter((link) => !link.meta.requiresNoAuth)
         : this.links.filter((link) => !link.meta.requiresAuth)
     },
-    ...mapState({
-      user: (state) => state.user.current,
+    ...mapGetters('user', {
+      user: 'getCurrentUser',
     }),
   },
 }

@@ -63,6 +63,7 @@
 import { email, required, minLength, maxLength } from 'vuelidate/lib/validators'
 import { validationMixin } from 'vuelidate'
 import NProgress from 'nprogress'
+import { validateEmail } from '@/helpers/validators.js'
 
 export default {
   mixins: [validationMixin],
@@ -77,10 +78,7 @@ export default {
       nameRules: [(v) => !!v || '名字是必填项。'],
       emailRules: [
         (v) => !!v || '邮箱是必填项。',
-        (v) =>
-          /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(
-            v
-          ) || '请输入格式正确的邮箱。',
+        (v) => validateEmail(v) || '请输入格式正确的邮箱。',
       ],
       passwordRules: [
         (v) => !!v || '密码是必填项。',
@@ -127,7 +125,7 @@ export default {
             this.$store.dispatch('message/push', {
               type: 'error',
               text:
-                err.response.data.message === 'duplicated_email'
+                err.response.data.message === 'DUPLICATED_EMAIL'
                   ? '该邮箱已注册。'
                   : err.response.data.message,
             })

@@ -1,5 +1,4 @@
 import APIService from '@/services/APIService.js'
-import router from '@/router.js'
 
 export const namespaced = true
 
@@ -10,19 +9,41 @@ export const state = {
   //   name: 'Justin Liu',
   //   email: 'my@email.com',
   //   type: 'user',
+  //   token: ...
   // }
-  current: null,
+  user: null,
 }
 
 export const mutations = {
   SET_USER_DATA(state, userData) {
-    state.current = userData
-    localStorage.setItem('user', JSON.stringify(userData))
-    APIService.setAuth(userData.token)
+    let old_token = null
+    const userString = localStorage.getItem('user')
+    if (userString) {
+      const userData = JSON.parse(userString)
+      old_token = userData['token']
+    }
+
+    state.user = {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      type: userData.type,
+      token: userData.access_token ? userData.access_token : old_token, // every field is required!
+    }
+    localStorage.setItem('user', JSON.stringify(state.user))
+    console.log(state.user.token)
+    APIService.setAuth(state.user.token)
   },
   CLEAR_USER_DATA(state) {
     localStorage.removeItem('user')
-    state.current = null
+    state.user = null
+    APIService.clearAuth()
+  },
+}
+
+export const getters = {
+  getCurrentUser(state) {
+    return state.user
   },
 }
 
@@ -34,18 +55,14 @@ export const actions = {
   },
   // eslint-disable-next-line no-empty-pattern
   signup({}, credentials) {
-    return APIService.signup(credentials)
+    return APIService.userCreate(credentials)
   },
-  logout({ commit, dispatch }) {
+  updateInfo({ commit }, info) {
+    return APIService.userUpdate(info).then(({ data }) => {
+      commit('SET_USER_DATA', data)
+    })
+  },
+  logout({ commit }) {
     commit('CLEAR_USER_DATA')
-    dispatch(
-      'message/push',
-      {
-        type: 'success',
-        text: '注销成功。',
-      },
-      { root: true }
-    )
-    router.push({ name: 'home' })
   },
 }

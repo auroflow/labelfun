@@ -103,7 +103,7 @@ export default {
             this.$store.dispatch('message/push', {
               type: 'error',
               text:
-                err.response.data.message === 'incorrect_email_or_password'
+                err.response.data.message === 'INCORRECT_EMAIL_OR_PASSWORD'
                   ? '邮箱或密码错误。'
                   : err.response.data.message,
             })
