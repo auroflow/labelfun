@@ -1,12 +1,14 @@
 from apiflask import APIBlueprint, input, output, abort
-from apiflask.schemas import EmptySchema
 from flask import g
 from flask.views import MethodView
 
-from labelfun.extensions import db
-from labelfun.models import User
 from labelfun.apis.auth import auth_required
-from labelfun.schemas import UserCreateInSchema, UserEditInSchema, UserQueryOutSchema
+from labelfun.extensions import db
+from labelfun.models import UserType
+from labelfun.models.user import User
+from labelfun.schemas.user import UserCreateInSchema, UserEditInSchema, \
+    UserQueryOutSchema
+
 user_bp = APIBlueprint('user', __name__)
 
 
@@ -25,15 +27,10 @@ class UsersView(MethodView):
             abort(400, 'DUPLICATED_EMAIL')
 
         new_user = User(name=name, email=email,
-                        password=password, type='user')
+                        password=password, type=UserType.USER)
         db.session.add(new_user)
         db.session.commit()
-        return {
-            'id': User.query.filter_by(email=email).first().id,
-            'name': name,
-            'email': email,
-            'type': 'user'
-        }
+        return new_user
 
 
 @user_bp.route('/<int:user_id>', endpoint='user')
@@ -42,7 +39,7 @@ class UserView(MethodView):
     @output(UserQueryOutSchema)
     @auth_required()
     def get(self, user_id):
-        if g.current_user.id != user_id and g.current_user.type != 'admin':
+        if g.current_user.id != user_id and g.current_user.type != UserType.ADMIN:
             abort(403)
         if g.current_user.id == user_id:
             return g.current_user
@@ -57,7 +54,7 @@ class UserView(MethodView):
     @auth_required()
     def patch(self, user_id, data):
         # non-admin users cannot change info of other users
-        if g.current_user.id != user_id and g.current_user.type != 'admin':
+        if g.current_user.id != user_id and g.current_user.type != UserType.ADMIN:
             abort(403, 'UNAUTHORIZED')
 
         user = User.query.get(user_id)
@@ -75,7 +72,7 @@ class UserView(MethodView):
                 abort(400, 'DUPLICATED_EMAIL')
 
         # non-admin users cannot change info without old_password
-        if g.current_user.type != 'admin':
+        if g.current_user.type != UserType.ADMIN:
             if old_password is None or old_password == '':
                 abort(403, 'OLD_PASSWORD_REQUIRED')
             if not user.check_password(old_password):
@@ -87,11 +84,6 @@ class UserView(MethodView):
             user.email = email
         if new_password is not None and new_password != '':
             user.set_password(new_password)
-        user_type = user.type
+
         db.session.commit()
-        return {
-            'id': user_id,
-            'name': name,
-            'email': email,
-            'type': user_type
-        }
+        return user
