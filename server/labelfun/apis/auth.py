@@ -1,11 +1,14 @@
 from functools import wraps
+
 from apiflask import APIBlueprint, input, output, abort
 from flask import current_app, g, request
 from flask.views import MethodView
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
-from labelfun.models import User
-from labelfun.schemas import LoginInSchema, LoginOutSchema
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
+    BadSignature, SignatureExpired
 
+from labelfun.models import UserType
+from labelfun.models.user import User
+from labelfun.schemas.user import LoginInSchema, LoginOutSchema
 
 auth_bp = APIBlueprint('auth', __name__)
 
@@ -37,17 +40,17 @@ class Login(MethodView):
         token, expiration = generate_token(user)
 
         return {
-            'id': user.id,
-            'email': user.email,
-            'name': user.name,
-            'type': user.type,
-            'access_token': token,
-            'expires_in': expiration,
-            'token_type': 'Bearer'
-        }, {
-            'Cache-Control': 'no-store',
-            'Pragma': 'no-cache'
-        }
+                   'id': user.id,
+                   'email': user.email,
+                   'name': user.name,
+                   'type': UserType(user.type).name.lower(),
+                   'access_token': token,
+                   'expires_in': expiration,
+                   'token_type': 'Bearer'
+               }, {
+                   'Cache-Control': 'no-store',
+                   'Pragma': 'no-cache'
+               }
 
 
 def get_token():
@@ -92,9 +95,11 @@ def auth_required(admin=False):
                     abort(401, 'INVALID_TOKEN', headers={
                         'WWW-Authenticate': 'Bearer'
                     })
-                if admin and g.current_user.type != 'admin':
+                if admin and g.current_user.type != UserType.ADMIN:
                     abort(403, 'Forbidden.')
 
             return f(*args, **kwargs)
+
         return decorated
+
     return wrapped
