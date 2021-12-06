@@ -20,7 +20,7 @@ entity_bp = APIBlueprint('entity', __name__)
 class EntitiesView(MethodView):
 
     @input(GetTokenInSchema)
-    @output(GetTokenOutSchema)
+    @output(GetTokenOutSchema, 201)
     @auth_required()
     def post(self, data):
         access_key = current_app.config['QINIU_ACCESS_KEY']

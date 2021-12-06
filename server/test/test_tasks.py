@@ -95,7 +95,6 @@ class TestTask(BaseTestCase):
             )
         )
         times = [task['time'] for task in response.get_json()['tasks']]
-        print(times)
         self.assertTrue(all(a <= b for a, b in zip(times, times[1:])))
 
         # test desc order
@@ -107,7 +106,6 @@ class TestTask(BaseTestCase):
             )
         )
         times = [task['time'] for task in response.get_json()['tasks']]
-        print(times)
         self.assertTrue(all(a >= b for a, b in zip(times, times[1:])))
 
     def test_task_get(self):
