@@ -86,7 +86,9 @@ def auth_required(admin=False):
 
             if request.method != 'OPTIONS':
                 if token_type is None or token_type.lower() != 'bearer':
-                    abort(400, 'The token type must be bearer.')
+                    abort(401, 'The token type must be bearer.', headers={
+                        'WWW-Authenticate': 'Bearer'
+                    })
                 if token is None:
                     abort(401, headers={
                         'WWW-Authenticate': 'Bearer'
