@@ -1,5 +1,6 @@
 from marshmallow import Schema, EXCLUDE
 from marshmallow.fields import Integer, String, Function, List, Nested
+from marshmallow.validate import OneOf
 
 from labelfun.models import JobStatus, TaskType
 
@@ -29,7 +30,17 @@ class EntityOutSummarySchema(Schema):
     thumb_key = String()
     type = Function(lambda obj: TaskType(obj.type).name.lower())
     status = Function(lambda obj: JobStatus(obj.status).name.lower())
+    task_id = Integer()
 
 
 class EntityOutSchema(EntityOutSummarySchema):
-    annotation = String()
+    annotation = String(dump_default="")
+    frames = List(String)
+
+
+class LabelInSchema(Schema):
+    annotation = String(required=True)
+
+
+class ReviewInSchema(Schema):
+    review = String(required=True, validate=[OneOf(['correct', 'incorrect'])])

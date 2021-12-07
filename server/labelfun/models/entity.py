@@ -18,13 +18,16 @@ class Entity(db.Model):
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
     task = db.relationship('Task', back_populates='entities')
 
-    frames = db.relationship('Frame', back_populates='entity')
+    frames = db.relationship('Frame', back_populates='entity',
+                             cascade="all, delete")
 
 
 @event.listens_for(Entity.status, 'set')
 def update_task_status(target, value, oldvalue, initiator):
     task = target.task
-    if oldvalue == JobStatus.UNLABELED and value == JobStatus.UNREVIEWED:
+    if oldvalue == value:
+        pass
+    elif oldvalue == JobStatus.UNLABELED and value == JobStatus.UNREVIEWED:
         task.labeled_count += 1
     elif oldvalue == JobStatus.UNREVIEWED and value == JobStatus.DONE:
         task.reviewed_count += 1
@@ -32,7 +35,7 @@ def update_task_status(target, value, oldvalue, initiator):
         task.labeled_count -= 1
     elif oldvalue != symbol('NO_VALUE'):
         raise ValueError(
-            'Task status cannot switch from ' + str(oldvalue) + ' to ' + str(
+            'Entity status cannot switch from ' + str(oldvalue) + ' to ' + str(
                 value))
 
 

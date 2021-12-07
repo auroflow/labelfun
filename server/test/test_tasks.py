@@ -273,6 +273,3 @@ class TestTask(BaseTestCase):
             headers=self.set_headers(token)
         )
         self.assertEqual(response.status_code, 403)
-
-    def test_task_claim(self):
-        pass

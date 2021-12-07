@@ -25,6 +25,16 @@ class TaskInSchema(Schema):
         return Task(**data)
 
 
+class TaskModifyInSchema(Schema):
+    name = String()
+    type = String(allow_none=True, validate=[
+        OneOf(choices=['image_cls', 'image_seg', 'video_seg'],
+              error="Type must be one of image_cls, image_seg and video_seg.")
+    ])
+    labels = List(String)
+    published = Boolean()
+
+
 class TaskOutSummarySchema(Schema):
     class Meta:
         unknown = EXCLUDE
@@ -50,9 +60,9 @@ class TasksQuerySchema(Schema):
     creator = Integer(allow_none=True)
     labeler = Integer(allow_none=True)
     reviewer = Integer(allow_none=True)
-    page = Integer(missing=1)
+    page = Integer(load_default=1)
     per_page = Integer(missing=20, validate=[Range(max=30)])
-    order = String(missing='desc',
+    order = String(load_default='desc',
                    validate=[OneOf(['desc', 'asc'])])
 
 

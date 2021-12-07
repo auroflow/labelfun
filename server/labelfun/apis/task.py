@@ -11,7 +11,7 @@ from labelfun.extensions import db
 from labelfun.models import UserType, TaskType, JobStatus
 from labelfun.models.task import Task
 from labelfun.schemas.task import TaskOutSchema, TasksOutSchema, TaskInSchema, \
-    TasksQuerySchema, TaskProcessInSchema
+    TasksQuerySchema, TaskProcessInSchema, TaskModifyInSchema
 
 task_bp = APIBlueprint('task', __name__)
 
@@ -22,6 +22,7 @@ class TaskView(MethodView):
     @output(TaskOutSchema)
     @auth_required()
     def get(self, task_id):
+        """Get a task."""
         task = Task.query.get_or_404(task_id)
         return task
 
@@ -29,6 +30,7 @@ class TaskView(MethodView):
     @output(TaskOutSchema, 201)
     @auth_required()
     def post(self, task_id, data):
+        """Claim a task."""
         task = Task.query.get_or_404(task_id)
         user = g.current_user
         if not task.published:
@@ -38,7 +40,7 @@ class TaskView(MethodView):
                 abort(400, 'TASK_UNDERTAKEN')
             task.labeler = user
         else:  # 'review'
-            if task.status is not JobStatus.UNREVIEWED:
+            if task.status != JobStatus.UNREVIEWED:
                 abort(400, 'TASK_NOT_LABELED')
             if task.reviewer is not None:
                 abort(400, 'TASK_UNDERTAKEN')
@@ -46,12 +48,34 @@ class TaskView(MethodView):
         db.session.commit()
         return task
 
+    @input(TaskModifyInSchema)
     @output(TaskOutSchema, 200)
+    @auth_required()
+    def put(self, task_id, data):
+        """Modify or publish a task."""
+        task = Task.query.get_or_404(task_id)
+        user = g.current_user
+        if user.type != UserType.ADMIN and task.creator != user:
+            abort(403)
+        if task.published:
+            abort(400, "TASK_PUBLISHED")
+
+        task.name = data.get('name', task.name)
+        if 'label' in data:
+            task.labels = ','.join(data['labels'])
+        task.published = data.get('published', task.published)
+        db.session.commit()
+        return task
+
+    @input(TaskProcessInSchema)
+    @output(TaskOutSchema, 200)
+    @auth_required()
     def patch(self, task_id, data):
+        """Complete a claimed task."""
         task = Task.query.get_or_404(task_id)
         user = g.current_user
         if data['type'] == 'label':
-            if task.labeler != user or user.type != UserType.ADMIN:
+            if task.labeler != user and user.type != UserType.ADMIN:
                 abort(403)
             if task.status != JobStatus.UNLABELED:
                 abort(400, 'TASK_STATUS_IS_NOT_UNLABELED')
@@ -59,9 +83,9 @@ class TaskView(MethodView):
                 abort(400, 'JOB_IS_NOT_DONE')
             task.status = JobStatus.UNREVIEWED
         else:  # 'review'
-            if task.reviewer != user or user.type != UserType.ADMIN:
+            if task.reviewer != user and user.type != UserType.ADMIN:
                 abort(403)
-            if task.status != JobStatus.UNLABELED:
+            if task.status != JobStatus.UNREVIEWED:
                 abort(400, 'TASK_STATUS_IS_NOT_UNREVIEWED')
             if task.labeled_count != task.reviewed_count:
                 abort(400, 'JOB_IS_NOT_DONE')
@@ -75,6 +99,7 @@ class TaskView(MethodView):
     @output(EmptySchema, 204)
     @auth_required()
     def delete(self, task_id):
+        """Deletes a task."""
         task = Task.query.get(task_id)
         if task is None:
             abort(404)

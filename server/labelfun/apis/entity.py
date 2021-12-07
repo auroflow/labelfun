@@ -11,7 +11,7 @@ from labelfun.models import UserType, JobStatus, TaskType
 from labelfun.models.entity import Entity
 from labelfun.models.task import Task
 from labelfun.schemas.entity import GetTokenInSchema, GetTokenOutSchema, \
-    EntityOutSchema
+    EntityOutSchema, LabelInSchema, ReviewInSchema
 
 entity_bp = APIBlueprint('entity', __name__)
 
@@ -23,6 +23,7 @@ class EntitiesView(MethodView):
     @output(GetTokenOutSchema, 201)
     @auth_required()
     def post(self, data):
+        """Request an upload token."""
         access_key = current_app.config['QINIU_ACCESS_KEY']
         secret_key = current_app.config['QINIU_SECRET_KEY']
 
@@ -74,5 +75,58 @@ class EntitiesView(MethodView):
 class EntityView(MethodView):
 
     @output(EntityOutSchema)
+    @auth_required()
     def get(self, entity_id):
-        return {}
+        """Gets an entity."""
+        entity = Entity.query.get_or_404(entity_id)
+        return entity
+
+    @input(LabelInSchema)
+    @output(EntityOutSchema)
+    @auth_required()
+    def post(self, entity_id, data):
+        """Label an entity."""
+        entity = Entity.query.get_or_404(entity_id)
+        user = g.current_user
+        task = entity.task
+        if user.type != UserType.ADMIN and user != task.labeler:
+            abort(403)
+        if entity.status not in [JobStatus.UNLABELED, JobStatus.UNREVIEWED]:
+            abort(400, 'ENTITY_IS_NOT_UNLABELED_NOR_UNREVIEWED')
+        if task.status != JobStatus.UNLABELED:
+            abort(400, 'TASK_IS_NOT_UNLABELED')
+
+        annotation = data.get('annotation')
+        if not annotation:
+            entity.annotation = None
+            entity.status = JobStatus.UNLABELED
+        else:
+            entity.annotation = annotation
+            entity.status = JobStatus.UNREVIEWED
+
+        db.session.commit()
+        return entity
+
+    @input(ReviewInSchema)
+    @output(EntityOutSchema)
+    @auth_required()
+    def put(self, entity_id, data):
+        """Review an entity."""
+        entity = Entity.query.get_or_404(entity_id)
+        user = g.current_user
+        task = entity.task
+        if user.type != UserType.ADMIN and user != task.reviewer:
+            abort(403)
+        if entity.status != JobStatus.UNREVIEWED:
+            abort(400, 'ENTITY_IS_NOT_UNREVIEWED')
+        if task.status != JobStatus.UNREVIEWED:
+            abort(400, 'TASK_IS_NOT_UNREVIEWED')
+
+        review = data['review']
+        if review == 'correct':
+            entity.status = JobStatus.DONE
+        else:  # 'incorrect'
+            entity.status = JobStatus.UNLABELED
+            entity.annotation = None
+        db.session.commit()
+        return entity
