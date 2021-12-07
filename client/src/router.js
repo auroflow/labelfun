@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
+import TaskCenter from './views/TaskCenter.vue'
 import NProgress from 'nprogress'
 import store from '@/store'
 
@@ -13,9 +13,31 @@ const router = new Router({
     {
       path: '/',
       name: 'home',
-      component: Home,
+      component: TaskCenter,
       meta: {
-        displayName: '首页',
+        requiresAuth: true,
+        displayName: '任务中心',
+      },
+      beforeEnter(routeTo, routeFrom, next) {
+        store
+          .dispatch('task/fetchTasks')
+          .then(() => {
+            next()
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 404) {
+              store.dispatch('message/push', {
+                type: 'error',
+                text: error.response.data,
+              })
+            } else {
+              store.dispatch('message/push', {
+                type: 'error',
+                text: '出现了未知错误。',
+              })
+            }
+            NProgress.done()
+          })
       },
     },
     {

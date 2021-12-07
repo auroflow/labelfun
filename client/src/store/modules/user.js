@@ -31,7 +31,6 @@ export const mutations = {
       token: userData.access_token ? userData.access_token : old_token, // every field is required!
     }
     localStorage.setItem('user', JSON.stringify(state.user))
-    console.log(state.user.token)
     APIService.setAuth(state.user.token)
   },
   CLEAR_USER_DATA(state) {

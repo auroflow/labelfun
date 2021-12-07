@@ -6,7 +6,7 @@ const apiClient = axios.create({
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 5000,
 })
 
 export default {
@@ -27,5 +27,15 @@ export default {
   },
   userUpdate(info) {
     return apiClient.patch('/api/users/' + info.id, info.data)
+  },
+  tasksFetch() {
+    return apiClient.get('/api/tasks', {
+      params: {
+        order: 'desc',
+      },
+    })
+  },
+  taskFetch(id) {
+    return apiClient.get('/api/tasks/' + id)
   },
 }
