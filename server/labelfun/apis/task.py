@@ -8,10 +8,10 @@ from sqlalchemy import desc
 
 from labelfun.apis.auth import auth_required
 from labelfun.extensions import db
-from labelfun.models import UserType, TaskType
+from labelfun.models import UserType, TaskType, JobStatus
 from labelfun.models.task import Task
 from labelfun.schemas.task import TaskOutSchema, TasksOutSchema, TaskInSchema, \
-    TasksQuerySchema, TaskClaimInSchema
+    TasksQuerySchema, TaskProcessInSchema
 
 task_bp = APIBlueprint('task', __name__)
 
@@ -25,22 +25,50 @@ class TaskView(MethodView):
         task = Task.query.get_or_404(task_id)
         return task
 
-    @input(TaskClaimInSchema)
+    @input(TaskProcessInSchema)
     @output(TaskOutSchema, 201)
     @auth_required()
     def post(self, task_id, data):
         task = Task.query.get_or_404(task_id)
         user = g.current_user
+        if not task.published:
+            abort(400, 'TASK_UNPUBLISHED')
         if data['type'] == 'label':
             if task.labeler is not None:
                 abort(400, 'TASK_UNDERTAKEN')
             task.labeler = user
         else:  # 'review'
-            if task.labeler is None:
+            if task.status is not JobStatus.UNREVIEWED:
                 abort(400, 'TASK_NOT_LABELED')
-            elif task.reviewer is not None:
+            if task.reviewer is not None:
                 abort(400, 'TASK_UNDERTAKEN')
             task.reviewer = user
+        db.session.commit()
+        return task
+
+    @output(TaskOutSchema, 200)
+    def patch(self, task_id, data):
+        task = Task.query.get_or_404(task_id)
+        user = g.current_user
+        if data['type'] == 'label':
+            if task.labeler != user or user.type != UserType.ADMIN:
+                abort(403)
+            if task.status != JobStatus.UNLABELED:
+                abort(400, 'TASK_STATUS_IS_NOT_UNLABELED')
+            if len(task.entities) != task.labeled_count:
+                abort(400, 'JOB_IS_NOT_DONE')
+            task.status = JobStatus.UNREVIEWED
+        else:  # 'review'
+            if task.reviewer != user or user.type != UserType.ADMIN:
+                abort(403)
+            if task.status != JobStatus.UNLABELED:
+                abort(400, 'TASK_STATUS_IS_NOT_UNREVIEWED')
+            if task.labeled_count != task.reviewed_count:
+                abort(400, 'JOB_IS_NOT_DONE')
+            if task.reviewed_count == len(task.entities):
+                task.status = JobStatus.DONE
+            else:
+                task.status = JobStatus.UNLABELED
         db.session.commit()
         return task
 
@@ -87,10 +115,9 @@ class TasksView(MethodView):
             tasks = tasks.order_by(Task.time)
         else:
             tasks = tasks.order_by(desc(Task.time))
-        pagination = tasks.paginate(
-            page=query['page'],
-            per_page=query['per_page']
-        )
+
+        pagination = tasks.paginate(page=query['page'],
+                                    per_page=query['per_page'])
         return {
             'tasks': pagination.items,
             'pagination': pagination_builder(pagination)
@@ -100,10 +127,11 @@ class TasksView(MethodView):
     @output(TaskOutSchema, 201)
     @auth_required()
     def post(self, task):
-        user = g.current_user
-
+        task.status = JobStatus.UNLABELED
         task.time = datetime.now()
-        task.creator = user
+        task.creator = g.current_user
+        task.published = False
+
         db.session.add(task)
         db.session.commit()
 

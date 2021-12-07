@@ -13,7 +13,8 @@ class Task(db.Model):
     time: datetime = db.Column(db.DateTime, nullable=False)
     type: TaskType = db.Column(db.Integer, nullable=False)
     labels: str = db.Column(db.String)  # separated by commas
-
+    published: bool = db.Column(db.Boolean, default=False)
+    status: JobStatus = db.Column(db.Integer, nullable=False)
     creator_id: int = db.Column(db.Integer, db.ForeignKey('user.id'),
                                 nullable=False)
     labeler_id: int = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -43,14 +44,3 @@ class Task(db.Model):
     def get_reviewed_count(self):
         return Entity.query.filter(Entity.task_id == self.id,
                                    Entity.status == JobStatus.DONE).count()
-
-    def get_status(self) -> JobStatus:
-        entity_count = len(self.entities)
-        if not entity_count:
-            return JobStatus.EMPTY
-        if entity_count == self.get_reviewed_count():
-            return JobStatus.DONE
-        elif entity_count == self.get_labeled_count():
-            return JobStatus.UNREVIEWED
-        else:
-            return JobStatus.UNLABELED

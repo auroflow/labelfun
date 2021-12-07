@@ -150,7 +150,8 @@ class TestTask(BaseTestCase):
         self.assertEqual(task['id'], id)
         self.assertEqual(task['creator']['email'], 'amy@email.com')
         self.assertIsNotNone(datetime.fromisoformat(task['time']))
-        self.assertEqual(task['status'], 'empty')
+        self.assertEqual(task['published'], False)
+        self.assertEqual(task['status'], 'unlabeled')
         self.assertEqual(task['name'], 'New Task #1')
         self.assertEqual(task['type'], 'image_seg')
         self.assertEqual(task['entity_count'], 0)
@@ -186,6 +187,9 @@ class TestTask(BaseTestCase):
         self.assertEqual(task['reviewed_count'], 0)
 
         # Label 2, review 1
+        Task.query.get(id).status = JobStatus.UNREVIEWED
+        Task.query.get(id).labeler_id = 1002
+        Task.query.get(id).reviewer_id = 2001
         entities = Entity.query.filter(Entity.id.in_(entities_id)).all()
         self.assertEqual(len(entities), 2)
         entities[0].status = JobStatus.UNREVIEWED
@@ -204,11 +208,16 @@ class TestTask(BaseTestCase):
         self.assertEqual(task['entity_count'], 2)
         self.assertEqual(task['labeled_count'], 2)
         self.assertEqual(task['reviewed_count'], 1)
+        self.assertEqual(task['labeler']['email'], 'bob@email.com')
+        self.assertEqual(task['reviewer']['email'], 'admin@email.com')
+        self.assertEqual(task['label_done'], True)
+        self.assertEqual(task['review_done'], False)
 
-        # Label 2, review 1
+        # Label 2, review 2
         entities = Entity.query.filter(Entity.id.in_(entities_id)).all()
         self.assertEqual(len(entities), 2)
         entities[0].status = JobStatus.DONE
+        Task.query.get(id).status = JobStatus.DONE
         db.session.commit()
 
         # Test status = unlabeled, entity_count = 2
@@ -222,6 +231,8 @@ class TestTask(BaseTestCase):
         self.assertEqual(task['entity_count'], 2)
         self.assertEqual(task['labeled_count'], 2)
         self.assertEqual(task['reviewed_count'], 2)
+        self.assertEqual(task['label_done'], True)
+        self.assertEqual(task['review_done'], True)
 
     def test_task_post(self):
         token = self.get_auth_token('amy@email.com', '12345678')
@@ -237,7 +248,7 @@ class TestTask(BaseTestCase):
         self.assertEqual(response.status_code, 201)
         task = response.get_json()
         self.assertEqual(task['creator']['name'], 'Amy')
-        self.assertEqual(task['status'], 'empty')
+        self.assertEqual(task['status'], 'unlabeled')
         self.assertEqual(task['type'], 'image_seg')
         entities = task['entities']
         self.assertEqual(len(entities), 0)

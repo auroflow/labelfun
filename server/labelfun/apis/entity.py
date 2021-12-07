@@ -37,8 +37,12 @@ class EntitiesView(MethodView):
             abort(404, 'NO_SUCH_TASK')
         if task.creator_id != g.current_user.id and g.current_user.type != UserType.ADMIN:
             abort(403)
+        if task.published:
+            # Images/videos cannot be added to published tasks
+            abort(400, 'TASK_PUBLISHED')
         if task.labeler_id is not None:
             abort(400, "TASK_UNDERTAKEN")
+
         # restrict upload types
         mime_limit = 'image/*' if task.type != TaskType.VIDEO_SEG else 'video/*'
 

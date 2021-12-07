@@ -1,10 +1,10 @@
 from apiflask import PaginationSchema
 from marshmallow import Schema, EXCLUDE, post_load
 from marshmallow.fields import String, List, Integer, Nested, Function, \
-    DateTime
+    DateTime, Boolean
 from marshmallow.validate import OneOf, Range
 
-from labelfun.models import TaskType
+from labelfun.models import TaskType, JobStatus
 from labelfun.models.task import Task
 from labelfun.schemas.entity import EntityOutSummarySchema
 from labelfun.schemas.user import UserQueryOutSchema
@@ -38,7 +38,10 @@ class TaskOutSummarySchema(Schema):
     labeled_count = Integer()
     reviewed_count = Integer()
     labels = Function(lambda obj: obj.labels.split(','))
-    status = Function(lambda obj: obj.get_status().name.lower())
+    status = Function(lambda obj: JobStatus(obj.status).name.lower())
+    published = Boolean()
+    label_done = Function(lambda obj: len(obj.entities) == obj.labeled_count)
+    review_done = Function(lambda obj: len(obj.entities) == obj.reviewed_count)
 
 
 class TasksQuerySchema(Schema):
@@ -70,5 +73,5 @@ class TaskOutSchema(TaskOutSummarySchema):
     entities = List(Nested(EntityOutSummarySchema))
 
 
-class TaskClaimInSchema(Schema):
+class TaskProcessInSchema(Schema):
     type = String(required=True, validate=[OneOf(['label', 'review'])])

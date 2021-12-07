@@ -19,9 +19,11 @@ class TestTask(BaseTestCase):
         )
         self.assertEqual(response.status_code, 201)
         credentials = response.get_json()['credentials']
+        ret_paths = list()
         for i, cred in enumerate(credentials):
             ret, info = put_file(cred['token'], cred['key'], cred['path'],
                                  version='v2')
-            key = str(urlsafe_base64_decode(ret['key']))
-            task_id, path, time = key.split('&')
-            print(task_id, path, time)
+            key = urlsafe_base64_decode(ret['key'])
+            task_id, path, time = key.split(b'&')
+            ret_paths.append(path.decode())
+        self.assertEqual(paths, ret_paths)
