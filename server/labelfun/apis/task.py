@@ -24,6 +24,10 @@ class TaskView(MethodView):
     def get(self, task_id):
         """Get a task."""
         task = Task.query.get_or_404(task_id)
+        user = g.current_user
+        if not task.published:
+            if task.creator != user and user.type != UserType.ADMIN:
+                abort(403, 'TASK_UNPUBLISHED')
         return task
 
     @input(TaskProcessInSchema)
@@ -117,6 +121,7 @@ class TasksView(MethodView):
     @output(TasksOutSchema)
     @auth_required()
     def get(self, query):
+        """Get task list."""
         tasks = Task.query
 
         tipe = query.get('type')
@@ -152,6 +157,7 @@ class TasksView(MethodView):
     @output(TaskOutSchema, 201)
     @auth_required()
     def post(self, task):
+        """Create a task."""
         task.status = JobStatus.UNLABELED
         task.time = datetime.now()
         task.creator = g.current_user

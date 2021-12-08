@@ -1,7 +1,7 @@
 from apiflask import PaginationSchema
 from marshmallow import Schema, EXCLUDE, post_load
 from marshmallow.fields import String, List, Integer, Nested, Function, \
-    DateTime, Boolean
+    DateTime, Boolean, Method
 from marshmallow.validate import OneOf, Range
 
 from labelfun.models import TaskType, JobStatus
@@ -44,6 +44,8 @@ class TaskOutSummarySchema(Schema):
     name = String()
     type = Function(lambda obj: TaskType(obj.type).name.lower())
     creator = Nested(UserQueryOutSchema)
+    labeler = Nested(UserQueryOutSchema)
+    reviewer = Nested(UserQueryOutSchema)
     entity_count = Function(lambda obj: len(obj.entities))
     labeled_count = Integer()
     reviewed_count = Integer()
@@ -52,6 +54,22 @@ class TaskOutSummarySchema(Schema):
     published = Boolean()
     label_done = Function(lambda obj: len(obj.entities) == obj.labeled_count)
     review_done = Function(lambda obj: len(obj.entities) == obj.reviewed_count)
+    progress = Method('get_progress')
+
+    def get_progress(self, obj: Task):
+        if not obj.published:
+            return 'unpublished'
+        if obj.status == JobStatus.UNLABELED:
+            if obj.labeler is None:
+                return 'unlabeled'
+            else:
+                return 'labeling'
+        if obj.status == JobStatus.UNREVIEWED:
+            if obj.reviewer is None:
+                return 'unreviewed'
+            else:
+                return 'reviewing'
+        return 'done'
 
 
 class TasksQuerySchema(Schema):
@@ -78,8 +96,6 @@ class TaskOutSchema(TaskOutSummarySchema):
     class Meta:
         unknown = EXCLUDE
 
-    labeler = Nested(UserQueryOutSchema, allow_none=True)
-    reviewer = Nested(UserQueryOutSchema, allow_none=True)
     entities = List(Nested(EntityOutSummarySchema))
 
 

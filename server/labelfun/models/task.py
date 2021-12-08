@@ -2,7 +2,6 @@ from datetime import datetime
 
 from labelfun.extensions import db
 from labelfun.models import TaskType, JobStatus
-from labelfun.models.entity import Entity
 
 
 class Task(db.Model):
@@ -28,7 +27,6 @@ class Task(db.Model):
 
     entities = db.relationship('Entity', back_populates='task',
                                cascade='all, delete')
-    entities_count: int = db.Column(db.Integer, default=0)
     labeled_count: int = db.Column(db.Integer, default=0)
     reviewed_count: int = db.Column(db.Integer, default=0)
 
@@ -36,11 +34,3 @@ class Task(db.Model):
         super(Task, self).__init__(**kwargs)
         if labels is not None and len(labels):
             self.labels = ','.join(labels)
-
-    def get_labeled_count(self):
-        return Entity.query.filter(Entity.task_id == self.id,
-                                   Entity.status != JobStatus.UNLABELED).count()
-
-    def get_reviewed_count(self):
-        return Entity.query.filter(Entity.task_id == self.id,
-                                   Entity.status == JobStatus.DONE).count()

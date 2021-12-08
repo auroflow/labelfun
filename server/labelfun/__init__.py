@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+from time import sleep
 
 import click
 from apiflask import APIFlask
@@ -7,6 +9,8 @@ from flask.cli import load_dotenv
 from labelfun.apis import api_bp
 from labelfun.extensions import db
 from labelfun.models import UserType
+from labelfun.models.entity import Entity
+from labelfun.models.task import Task
 from labelfun.models.user import User
 from labelfun.settings import config
 
@@ -51,6 +55,9 @@ def register_commands(app: APIFlask):
     @app.cli.command()
     def fakedb():
         """Fake users."""
+        db.session.commit()
+        db.drop_all()
+        db.create_all()
         user1 = User(id=1001, name='Amy', password='12345678',
                      email='amy@email.com', type=0)
         user2 = User(id=1002, name='Bob', password=r'!@#$%^&*',
@@ -58,9 +65,38 @@ def register_commands(app: APIFlask):
         admin = User(id=2001, name='Admin', password='abcdefgh',
                      email='admin@email.com', type=1)
 
-        db.drop_all()
-        db.create_all()
-        db.session.add(user1)
-        db.session.add(user2)
-        db.session.add(admin)
+        image1 = Entity(type=0, key='key1', thumb_key="t1")
+        image2 = Entity(type=0, key='key2', thumb_key="t2")
+        task1 = Task(id=101, status=0, published=True, name='task1',
+                     time=datetime.now(), labeled_count=0, reviewed_count=0,
+                     type=0, labels=['flower', 'sun', 'sky'])
+        task1.creator = user1
+        task1.entities.append(image1)
+        task1.entities.append(image2)
+        sleep(0.01)
+        video1 = Entity(type=2, key='key3', thumb_key="t3")
+        video2 = Entity(type=2, key='key4', thumb_key="t4", status=1,
+                        annotation="annotation #1")
+        task2 = Task(id=102, status=0, published=True, name='task2',
+                     time=datetime.now(), labeled_count=1, reviewed_count=0,
+                     type=2, labels=['dog', 'cat', 'bird'])
+        task2.creator = user2
+        task2.labeler = user1
+        task2.entities.append(video1)
+        task2.entities.append(video2)
+        sleep(0.01)
+        image5 = Entity(type=1, key='key5', thumb_key="t5", status=2,
+                        annotation='annotation #2')
+        image6 = Entity(type=1, key='key6', thumb_key="t6", status=1,
+                        annotation='annotation #3')
+        task3 = Task(id=103, status=1, published=True, name='task3',
+                     time=datetime.now(), labeled_count=2, reviewed_count=1,
+                     type=1, labels=['water', 'air', 'fire'])
+        task3.creator = user1
+        task3.labeler = user2
+        task3.reviewer = admin
+        image5.task = task3
+        task3.entities.append(image6)
+        db.session.add_all([user1, user2, admin, image1, image2, task1,
+                            video1, video2, task2])
         db.session.commit()

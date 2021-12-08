@@ -35,6 +35,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task",
                             type="image_seg",
                             status="unlabeled",
+                            progress='unpublished',
                             published=False,
                             labeled_count=0,
                             reviewed_count=0,
@@ -81,6 +82,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="unlabeled",
+                            progress='unlabeled',
                             published=True,
                             entity_count=2,
                             labeled_count=0,
@@ -122,6 +124,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="unlabeled",
+                            progress='labeling',
                             published=True,
                             entity_count=2,
                             labeled_count=0,
@@ -242,6 +245,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="unlabeled",
+                            progress='labeling',
                             published=True,
                             entity_count=2,
                             labeled_count=2,
@@ -269,6 +273,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="unreviewed",
+                            progress='unreviewed',
                             published=True,
                             entity_count=2,
                             labeled_count=2,
@@ -291,7 +296,7 @@ class TestTaskLifeCycle(BaseTestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['message'],
-                         'TASK_IS_NOT_UNLABELED')
+                         'TASK_STATUS_IS_NOT_UNLABELED')
 
         # Admin takes the review task
         token = self.get_auth_token('admin@email.com', 'abcdefgh')
@@ -308,6 +313,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="unreviewed",
+                            progress='reviewing',
                             published=True,
                             entity_count=2,
                             labeled_count=2,
@@ -368,6 +374,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="unlabeled",
+                            progress='labeling',
                             published=True,
                             entity_count=2,
                             labeled_count=1,
@@ -426,6 +433,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="unreviewed",
+                            progress='reviewing',
                             published=True,
                             entity_count=2,
                             labeled_count=2,
@@ -483,6 +491,7 @@ class TestTaskLifeCycle(BaseTestCase):
                             name="Amy's New Task Name",
                             type="image_seg",
                             status="done",
+                            progress='done',
                             published=True,
                             entity_count=2,
                             labeled_count=2,

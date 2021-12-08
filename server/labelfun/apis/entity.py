@@ -94,7 +94,7 @@ class EntityView(MethodView):
         if entity.status not in [JobStatus.UNLABELED, JobStatus.UNREVIEWED]:
             abort(400, 'ENTITY_IS_NOT_UNLABELED_NOR_UNREVIEWED')
         if task.status != JobStatus.UNLABELED:
-            abort(400, 'TASK_IS_NOT_UNLABELED')
+            abort(400, 'TASK_STATUS_IS_NOT_UNLABELED')
 
         annotation = data.get('annotation')
         if not annotation:
@@ -120,7 +120,7 @@ class EntityView(MethodView):
         if entity.status != JobStatus.UNREVIEWED:
             abort(400, 'ENTITY_IS_NOT_UNREVIEWED')
         if task.status != JobStatus.UNREVIEWED:
-            abort(400, 'TASK_IS_NOT_UNREVIEWED')
+            abort(400, 'TASK_STATUS_IS_NOT_UNREVIEWED')
 
         review = data['review']
         if review == 'correct':

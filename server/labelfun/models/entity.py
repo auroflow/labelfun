@@ -12,7 +12,7 @@ class Entity(db.Model):
     key: str = db.Column(db.String, nullable=False)
     thumb_key: str = db.Column(db.String, nullable=False)
     type: TaskType = db.Column(db.Integer, nullable=False)
-    status: JobStatus = db.Column(db.Integer, nullable=False)
+    status: JobStatus = db.Column(db.Integer, default=JobStatus.UNLABELED)
     annotation: str = db.Column(db.Text)
 
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)

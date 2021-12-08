@@ -43,8 +43,9 @@ class BaseTestCase(unittest.TestCase):
                         status=0)
         image2 = Entity(type=0, key='key2', thumb_key="t2",
                         status=0)
-        task1 = Task(id=101, status=0, name='task1', time=datetime.now(),
-                     type=0, labels=['flower', 'sun', 'sky'])
+        task1 = Task(id=101, status=0, published=True, name='task1',
+                     time=datetime.now(), type=0,
+                     labels=['flower', 'sun', 'sky'])
         task1.creator = user1
         task1.entities.append(image1)
         task1.entities.append(image2)
@@ -53,8 +54,8 @@ class BaseTestCase(unittest.TestCase):
                         status=0)
         video2 = Entity(type=2, key='key4', thumb_key="t4",
                         status=1)
-        task2 = Task(id=102, status=0, name='task2', time=datetime.now(),
-                     type=2, labels=['dog', 'cat', 'bird'])
+        task2 = Task(id=102, status=0, name='task2', published=True,
+                     time=datetime.now(), type=2, labels=['dog', 'cat', 'bird'])
         task2.creator = user2
         task2.labeler = user1
         task2.entities.append(video1)
@@ -64,8 +65,9 @@ class BaseTestCase(unittest.TestCase):
                         status=2)
         image6 = Entity(type=1, key='key6', thumb_key="t6",
                         status=2)
-        task3 = Task(id=103, status=2, name='task3', time=datetime.now(),
-                     type=1, labels=['water', 'air', 'fire'])
+        task3 = Task(id=103, status=2, name='task3', published=True,
+                     time=datetime.now(), type=1,
+                     labels=['water', 'air', 'fire'])
         task3.creator = user1
         task3.labeler = user2
         task3.reviewer = admin
