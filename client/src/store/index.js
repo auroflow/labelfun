@@ -6,10 +6,18 @@ import message from '@/store/modules/message.js'
 import task from '@/store/modules/task.js'
 Vue.use(Vuex)
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
   modules: {
     user,
     message,
     task,
   },
 })
+
+const userString = localStorage.getItem('user')
+if (userString) {
+  const userData = JSON.parse(userString)
+  store.commit('user/SET_USER_DATA', userData)
+}
+
+export default store
