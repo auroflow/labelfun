@@ -40,4 +40,8 @@
 (snow-venv) $ pip install -r requirements.txt
 ```
 
-如果安装包的时候速度太慢，可以考虑设置 PyPI 国内镜像，具体参考这篇文章。
+# 测试
+
+```bash
+$ python -m unittest discover -v
+```

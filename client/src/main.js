@@ -2,20 +2,19 @@ import Vue from 'vue'
 import './plugins/vuetify'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
-import router from './router'
 import store from './store'
+import router from './router'
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
 import './assets/styles/nprogress.css'
 import Vuelidate from 'vuelidate'
-import axios from 'axios'
 
 Vue.use(Vuelidate)
 
 const requireComponent = require.context(
   // The relative path of the components folder
   './components',
-  // Whether or not to look in subfolders
+  // Whether to look in sub-folders
   false,
   // The regular expression used to match base component filenames
   /Base[A-Z]\w+\.(vue|js)$/
@@ -48,26 +47,6 @@ requireComponent.keys().forEach((fileName) => {
 Vue.config.productionTip = false
 
 new Vue({
-  created() {
-    const userString = localStorage.getItem('user')
-    if (userString) {
-      const userData = JSON.parse(userString)
-      this.$store.commit('user/SET_USER_DATA', userData)
-    }
-    axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response.status === 401) {
-          this.$store.dispatch('user/logout')
-          this.$store.dispatch('message/push', {
-            text: '登录失效，请重新登录。',
-            type: 'error',
-          })
-        }
-        return Promise.reject(error)
-      }
-    )
-  },
   vuetify,
   router,
   store,

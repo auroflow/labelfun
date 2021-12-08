@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
+import TaskCenter from './views/TaskCenter.vue'
 import NProgress from 'nprogress'
 import store from '@/store'
 
@@ -13,9 +13,10 @@ const router = new Router({
     {
       path: '/',
       name: 'home',
-      component: Home,
+      component: TaskCenter,
       meta: {
-        displayName: '首页',
+        requiresAuth: true,
+        displayName: '任务中心',
       },
     },
     {
@@ -40,6 +41,26 @@ const router = new Router({
       path: '/profile',
       name: 'profile',
       component: () => import('./views/Profile.vue'),
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/task/new',
+      name: 'create',
+      component: () => import('./views/TaskCreate.vue'),
+      meta: {
+        requiresAuth: true,
+        displayName: '新建任务',
+      },
+    },
+    {
+      path: '/task/:id',
+      name: 'task',
+      component: () => import('./views/TaskView.vue'),
+      props: (route) => ({
+        id: Number(route.params.id),
+      }),
       meta: {
         requiresAuth: true,
       },

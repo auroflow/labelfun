@@ -62,7 +62,6 @@
 <script>
 import { email, required, minLength, maxLength } from 'vuelidate/lib/validators'
 import { validationMixin } from 'vuelidate'
-import NProgress from 'nprogress'
 import { validateEmail } from '@/helpers/validators.js'
 
 export default {
@@ -114,28 +113,11 @@ export default {
           password: this.password,
         })
         .then(() => {
-          this.$store.dispatch('message/push', {
-            type: 'success',
-            text: '注册成功，请登录。',
-          })
+          this.$store.dispatch('message/pushSuccess', '注册成功，请登录。')
           this.$router.push({ name: 'login' })
         })
         .catch((err) => {
-          if (err.response && err.response.data.message) {
-            this.$store.dispatch('message/push', {
-              type: 'error',
-              text:
-                err.response.data.message === 'DUPLICATED_EMAIL'
-                  ? '该邮箱已注册。'
-                  : err.response.data.message,
-            })
-          } else {
-            this.$store.dispatch('message/push', {
-              type: 'error',
-              text: '发生了未知错误。',
-            })
-          }
-          NProgress.done()
+          this.$store.dispatch('message/pushError', err)
         })
     },
   },

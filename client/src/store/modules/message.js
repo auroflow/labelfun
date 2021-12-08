@@ -1,3 +1,25 @@
+import NProgress from 'nprogress'
+
+const errors = {
+  INCORRECT_EMAIL_OR_PASSWORD: '用户名或密码错误。',
+  'Validation error': '表单验证错误',
+  DUPLICATED_EMAIL: '该邮箱已注册。',
+  OLD_PASSWORD_REQUIRED: '需要填写原密码。',
+  INCORRECT_PASSWORD: '密码错误。',
+  UNAUTHORIZED: '无权限。',
+  'Not found': '找不到资源。',
+  NO_SUCH_TASK: '没有这个任务。',
+  TASK_UNDERTAKEN: '任务已领取。',
+  TASK_PUBLISHED: '任务已发布。',
+  TASK_UNPUBLISHED: '任务未发布。',
+  TASK_NOT_LABELED: '任务未标注完成。',
+  TASK_STATUS_IS_NOT_UNLABELED: '任务未在标注中。',
+  TASK_STATUS_IS_NOT_UNREVIEWED: '任务未在审核中。',
+  JOB_IS_NOT_DONE: '未完成任务。',
+  ENTITY_IS_NOT_UNLABELED_NOR_UNREVIEWED: '标注已完成，不能重复标注。',
+  ENTITY_IS_NOT_UNREVIEWED: '审核已完成，或还没有完成标注。',
+}
+
 export default {
   namespaced: true,
 
@@ -63,6 +85,33 @@ export default {
       if (!state.messages.length) {
         commit('CLEAR_POP_INTERVAL')
       }
+    },
+    pushError({ dispatch }, error) {
+      if (error.response?.data?.message) {
+        let message = null
+        if (error.response.data.message in errors) {
+          message = errors[error.response.data.message]
+        } else {
+          message = error.response.data.message
+        }
+        dispatch('push', {
+          type: 'error',
+          text: '错误 ' + error.response.status + '：' + message,
+        })
+      } else {
+        dispatch('push', {
+          type: 'error',
+          text: '出现了未知错误。',
+        })
+      }
+      NProgress.done()
+      return Promise.reject(error)
+    },
+    pushSuccess({ dispatch }, message) {
+      dispatch('push', {
+        type: 'success',
+        text: message,
+      })
     },
   },
 }
