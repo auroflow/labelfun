@@ -16,8 +16,8 @@
 </template>
 
 <script>
-import MessageBar from '@/components/MessageBar.vue'
-import NavBar from '@/components/NavBar.vue'
+import MessageBar from '@/components/TheMessageBar.vue'
+import NavBar from '@/components/TheNavBar.vue'
 
 export default {
   name: 'App',

@@ -179,30 +179,12 @@ export default {
       this.$store
         .dispatch('user/updateInfo', payload)
         .then(() => {
-          this.$store.dispatch('message/push', {
-            type: 'success',
-            text: '信息修改成功。',
-          })
+          this.$store.dispatch('message/pushSuccess', '信息修改成功。')
           this.modify = false
+          NProgress.done()
         })
         .catch((err) => {
-          if (err.response && err.response.data.message) {
-            this.$store.dispatch('message/push', {
-              type: 'error',
-              text:
-                err.response.data.message === 'DUPLICATED_EMAIL'
-                  ? '该邮箱已注册。'
-                  : err.response.data.message,
-            })
-          } else {
-            this.$store.dispatch('message/push', {
-              type: 'error',
-              text: '发生了未知错误。',
-            })
-          }
-        })
-        .finally(() => {
-          NProgress.done()
+          this.$store.dispatch('message/pushError', err)
         })
     },
   },

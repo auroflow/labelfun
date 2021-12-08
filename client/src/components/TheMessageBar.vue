@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-snackbar
+      width="400"
       app
       top
       transition="slide-y-transition"
@@ -12,7 +13,7 @@
       {{ messages.length ? messages[0].text : '' }}
       <template v-slot:action="{ attrs }">
         <v-btn text v-bind="attrs" @click="pop">
-          <template v-if="count == 1">关闭</template>
+          <template v-if="count === 1">关闭</template>
           <template v-else-if="count > 1">下一条 ({{ count - 1 }})</template>
         </v-btn>
       </template>

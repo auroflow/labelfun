@@ -18,27 +18,6 @@ const router = new Router({
         requiresAuth: true,
         displayName: '任务中心',
       },
-      beforeEnter(routeTo, routeFrom, next) {
-        store
-          .dispatch('task/fetchTasks')
-          .then(() => {
-            next()
-          })
-          .catch((error) => {
-            if (error.response && error.response.status === 404) {
-              store.dispatch('message/push', {
-                type: 'error',
-                text: error.response.data,
-              })
-            } else {
-              store.dispatch('message/push', {
-                type: 'error',
-                text: '出现了未知错误。',
-              })
-            }
-            NProgress.done()
-          })
-      },
     },
     {
       path: '/login',
@@ -62,6 +41,26 @@ const router = new Router({
       path: '/profile',
       name: 'profile',
       component: () => import('./views/Profile.vue'),
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/task/new',
+      name: 'create',
+      component: () => import('./views/TaskCreate.vue'),
+      meta: {
+        requiresAuth: true,
+        displayName: '新建任务',
+      },
+    },
+    {
+      path: '/task/:id',
+      name: 'task',
+      component: () => import('./views/TaskView.vue'),
+      props: (route) => ({
+        id: Number(route.params.id),
+      }),
       meta: {
         requiresAuth: true,
       },
