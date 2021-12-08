@@ -92,30 +92,13 @@ export default {
           password: this.password,
         })
         .then(() => {
-          this.$store.dispatch('message/push', {
-            type: 'success',
-            text: '登录成功。',
-          })
+          this.$store.dispatch('message/pushSuccess', '登录成功。')
           this.$router.push({ name: 'home' })
         })
         .catch((err) => {
-          if (err.response && err.response.data.message) {
-            this.$store.dispatch('message/push', {
-              type: 'error',
-              text:
-                err.response.data.message === 'INCORRECT_EMAIL_OR_PASSWORD'
-                  ? '邮箱或密码错误。'
-                  : err.response.data.message,
-            })
-            this.password = ''
-            this.$v.$reset()
-          } else {
-            this.$store.dispatch('message/push', {
-              type: 'error',
-              text: '发生了未知错误。',
-            })
-          }
-          NProgress.done()
+          this.$store.dispatch('message/pushError', err)
+          this.password = ''
+          this.$v.$reset()
         })
     },
   },

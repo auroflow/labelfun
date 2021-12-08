@@ -11,27 +11,34 @@
 
           <v-divider></v-divider>
 
-          <v-list>
-            <v-list-item-group mandatory v-model="activeComponent">
-              <v-list-item
-                v-for="({ name, text }, index) in links"
-                :key="`${name}-sidebar-link`"
-                link
-                @click="selectComponent(index)"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>{{ text }}</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
+          <v-tabs v-model="tab" vertical>
+            <v-tab
+              v-for="{ name, text } in links"
+              :key="`${name}-sidebar-link`"
+              class="text-center"
+            >
+              {{ text }}
+            </v-tab>
+          </v-tabs>
         </div>
       </v-col>
 
-      <v-col v-if="activeComponent === 0">
-        <profile-user-info :user="user"></profile-user-info>
+      <v-col>
+        <v-tabs-items v-model="tab">
+          <v-tab-item>
+            <profile-user-info :user="user"></profile-user-info>
+          </v-tab-item>
+          <v-tab-item>
+            <task-list :tasks="createdBy(user.id)"></task-list>
+          </v-tab-item>
+          <v-tab-item>
+            <task-list :tasks="labeledBy(user.id)"></task-list>
+          </v-tab-item>
+          <v-tab-item>
+            <task-list :tasks="reviewedBy(user.id)"></task-list>
+          </v-tab-item>
+        </v-tabs-items>
       </v-col>
-      <v-col v-else>TODO</v-col>
     </v-row>
   </v-container>
 </template>
@@ -39,15 +46,24 @@
 <script>
 import { mapGetters } from 'vuex'
 import ProfileUserInfo from '@/components/ProfileUserInfo.vue'
+import TaskList from '@/components/BaseTaskList.vue'
+import store from '@/store'
+
+function fetchTasks(next) {
+  store.dispatch('task/fetchTasks').then(() => {
+    next()
+  })
+}
 
 export default {
   name: 'home',
   components: {
     ProfileUserInfo,
+    TaskList,
   },
   data() {
     return {
-      activeComponent: 0,
+      tab: null,
       links: [
         {
           name: 'profile',
@@ -58,7 +74,7 @@ export default {
           text: '我发布的任务',
         },
         {
-          name: 'labelled',
+          name: 'labeled',
           text: '我标注的任务',
         },
         {
@@ -69,20 +85,25 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('user', { user: 'getCurrentUser' }),
+    ...mapGetters({
+      user: 'user/getCurrentUser',
+      createdBy: 'task/getTasksByCreator',
+      labeledBy: 'task/getTasksByLabeler',
+      reviewedBy: 'task/getTasksByReviewer',
+    }),
   },
   methods: {
     selectComponent(index) {
-      this.activeComponent = index
+      this.tab = index
     },
     logout() {
       this.$store.dispatch('user/logout')
-      this.$store.dispatch('message/push', {
-        type: 'success',
-        text: '注销成功。',
-      })
-      this.$router.push({ name: 'home' })
+      this.$store.dispatch('message/pushSuccess', '注销成功。')
+      this.$router.push({ name: 'login' })
     },
+  },
+  beforeRouteEnter(to, from, next) {
+    fetchTasks(next)
   },
 }
 </script>
