@@ -39,9 +39,9 @@ class BaseTestCase(unittest.TestCase):
         admin = User(id=2001, name='Admin', password='abcdefgh',
                      email='admin@email.com', type=1)
 
-        image1 = Entity(type=0, key='key1', thumb_key="t1",
+        image1 = Entity(type=0, key='key1', thumb_key="t1", path='path1',
                         status=0)
-        image2 = Entity(type=0, key='key2', thumb_key="t2",
+        image2 = Entity(type=0, key='key2', thumb_key="t2", path='path2',
                         status=0)
         task1 = Task(id=101, status=0, published=True, name='task1',
                      time=datetime.now(), type=0,
@@ -50,9 +50,9 @@ class BaseTestCase(unittest.TestCase):
         task1.entities.append(image1)
         task1.entities.append(image2)
         sleep(0.01)
-        video1 = Entity(type=2, key='key3', thumb_key="t3",
+        video1 = Entity(type=2, key='key3', thumb_key="t3", path='path3',
                         status=0)
-        video2 = Entity(type=2, key='key4', thumb_key="t4",
+        video2 = Entity(type=2, key='key4', thumb_key="t4", path='path4',
                         status=1)
         task2 = Task(id=102, status=0, name='task2', published=True,
                      time=datetime.now(), type=2, labels=['dog', 'cat', 'bird'])
@@ -61,9 +61,9 @@ class BaseTestCase(unittest.TestCase):
         task2.entities.append(video1)
         task2.entities.append(video2)
         sleep(0.01)
-        image5 = Entity(type=1, key='key5', thumb_key="t5",
+        image5 = Entity(type=1, key='key5', thumb_key="t5", path='path5',
                         status=2)
-        image6 = Entity(type=1, key='key6', thumb_key="t6",
+        image6 = Entity(type=1, key='key6', thumb_key="t6", path='path6',
                         status=2)
         task3 = Task(id=103, status=2, name='task3', published=True,
                      time=datetime.now(), type=1,

@@ -9,6 +9,7 @@ class Entity(db.Model):
     __tablename__ = 'entity'
 
     id: int = db.Column(db.Integer, primary_key=True)
+    path: str = db.Column(db.String, nullable=False)
     key: str = db.Column(db.String, nullable=False)
     thumb_key: str = db.Column(db.String, nullable=False)
     type: TaskType = db.Column(db.Integer, nullable=False)

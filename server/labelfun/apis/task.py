@@ -63,7 +63,9 @@ class TaskView(MethodView):
             abort(403)
         if task.published:
             abort(400, "TASK_PUBLISHED")
-
+        if data.get('published') is not None and not len(task.entities):
+            abort(400, "NO_ENTITIES")
+        
         task.name = data.get('name', task.name)
         if 'label' in data:
             task.labels = ','.join(data['labels'])
@@ -158,6 +160,10 @@ class TasksView(MethodView):
     @auth_required()
     def post(self, task):
         """Create a task."""
+        task_with_same_name = Task.query.filter_by(name=task.name).first()
+        if task_with_same_name is not None:
+            abort(400, 'DUPLICATED_TASK_NAME')
+
         task.status = JobStatus.UNLABELED
         task.time = datetime.now()
         task.creator = g.current_user

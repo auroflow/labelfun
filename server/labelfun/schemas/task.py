@@ -4,10 +4,27 @@ from marshmallow.fields import String, List, Integer, Nested, Function, \
     DateTime, Boolean, Method
 from marshmallow.validate import OneOf, Range
 
+import labelfun.schemas.user as lsu
 from labelfun.models import TaskType, JobStatus
 from labelfun.models.task import Task
-from labelfun.schemas.entity import EntityOutSummarySchema
-from labelfun.schemas.user import UserQueryOutSchema
+
+
+class EntityOutSummarySchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    id = Integer()
+    key = String()
+    path = String()
+    thumb_key = String()
+    type = Function(lambda obj: TaskType(obj.type).name.lower())
+    status = Function(lambda obj: JobStatus(obj.status).name.lower())
+    task_id = Integer()
+
+
+class EntityOutSchema(EntityOutSummarySchema):
+    annotation = String(dump_default="")
+    frames = List(String)
 
 
 # Task creation #
@@ -43,9 +60,9 @@ class TaskOutSummarySchema(Schema):
     time = DateTime()
     name = String()
     type = Function(lambda obj: TaskType(obj.type).name.lower())
-    creator = Nested(UserQueryOutSchema)
-    labeler = Nested(UserQueryOutSchema)
-    reviewer = Nested(UserQueryOutSchema)
+    creator = Nested(lsu.UserQueryOutSchema)
+    labeler = Nested(lsu.UserQueryOutSchema)
+    reviewer = Nested(lsu.UserQueryOutSchema)
     entity_count = Function(lambda obj: len(obj.entities))
     labeled_count = Integer()
     reviewed_count = Integer()
@@ -101,3 +118,28 @@ class TaskOutSchema(TaskOutSummarySchema):
 
 class TaskProcessInSchema(Schema):
     type = String(required=True, validate=[OneOf(['label', 'review'])])
+
+
+class GetTokenInSchema(Schema):
+    task_id = Integer(required=True)
+    paths = List(String, required=True)
+
+
+class TokenOutSchema(Schema):
+    id = Integer()
+    path = String()
+    token = String()
+    key = String()
+
+
+class GetTokenOutSchema(Schema):
+    credentials = List(Nested(TokenOutSchema))
+    task = Nested(TaskOutSchema)
+
+
+class LabelInSchema(Schema):
+    annotation = String(required=True)
+
+
+class ReviewInSchema(Schema):
+    review = String(required=True, validate=[OneOf(['correct', 'incorrect'])])

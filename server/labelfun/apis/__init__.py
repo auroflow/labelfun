@@ -10,7 +10,7 @@ api_bp = APIBlueprint('api', __name__)
 
 api_bp.register_blueprint(auth_bp, url_prefix='/auth')
 api_bp.register_blueprint(user_bp, url_prefix='/users')
-api_bp.register_blueprint(entity_bp, url_prefix='/media')
+api_bp.register_blueprint(entity_bp, url_prefix='/entities')
 api_bp.register_blueprint(task_bp, url_prefix='/tasks')
 
 

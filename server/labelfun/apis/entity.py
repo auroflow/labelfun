@@ -10,7 +10,7 @@ from labelfun.extensions import db
 from labelfun.models import UserType, JobStatus, TaskType
 from labelfun.models.entity import Entity
 from labelfun.models.task import Task
-from labelfun.schemas.entity import GetTokenInSchema, GetTokenOutSchema, \
+from labelfun.schemas.task import GetTokenInSchema, GetTokenOutSchema, \
     EntityOutSchema, LabelInSchema, ReviewInSchema
 
 entity_bp = APIBlueprint('entity', __name__)
@@ -60,7 +60,7 @@ class EntitiesView(MethodView):
             }
             token = q.upload_token(bucket_name, key, policy=policy)
 
-            entity = Entity(key=key, thumb_key=thumb_key,
+            entity = Entity(key=key, thumb_key=thumb_key, path=path,
                             type=task.type, status=JobStatus.UNLABELED)
             entity.task = task
             db.session.add(entity)
@@ -68,7 +68,7 @@ class EntitiesView(MethodView):
             credentials.append(
                 dict(id=entity.id, path=path, key=key, token=token))
 
-        return dict(credentials=credentials)
+        return dict(credentials=credentials, task=task)
 
 
 @entity_bp.route('/<int:entity_id>', endpoint='entity')
