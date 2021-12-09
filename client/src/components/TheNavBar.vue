@@ -22,7 +22,12 @@
 import { mapGetters } from 'vuex'
 
 export default {
-  props: ['name'],
+  props: {
+    name: {
+      type: String,
+      required: true,
+    },
+  },
   computed: {
     links() {
       return this.$router.getRoutes().filter((link) => link.meta.displayName)

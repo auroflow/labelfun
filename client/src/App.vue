@@ -1,24 +1,23 @@
 <template>
   <v-app>
-    <nav-bar :name="name"></nav-bar>
-    <v-main>
-      <message-bar></message-bar>
+    <template v-if="$route.name !== 'label'">
+      <nav-bar :name="name"></nav-bar>
+      <v-main>
+        <message-bar></message-bar>
+        <router-view></router-view>
+      </v-main>
+      <the-footer :name="name"></the-footer>
+    </template>
+    <template v-else>
       <router-view></router-view>
-    </v-main>
-    <v-footer color="primary lighten-1" padless>
-      <v-layout justify-center wrap>
-        <v-flex primary lighten-2 py-4 text-center white--text xs12>
-          {{ new Date().getFullYear() }} — <strong>{{ name }}</strong>
-        </v-flex>
-      </v-layout>
-    </v-footer>
+    </template>
   </v-app>
 </template>
 
 <script>
 import MessageBar from '@/components/TheMessageBar.vue'
 import NavBar from '@/components/TheNavBar.vue'
-
+import TheFooter from '@/components/TheFooter.vue'
 export default {
   name: 'App',
 
@@ -28,6 +27,6 @@ export default {
     }
   },
 
-  components: { MessageBar, NavBar },
+  components: { MessageBar, NavBar, TheFooter },
 }
 </script>
