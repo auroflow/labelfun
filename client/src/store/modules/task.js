@@ -1,5 +1,6 @@
 import APIService from '@/services/APIService'
 import NProgress from 'nprogress'
+import * as qiniu from 'qiniu-js'
 
 export default {
   namespaced: true,
@@ -9,6 +10,8 @@ export default {
     tasks: [],
     task: {},
     pagination: {},
+    uploading: false, // uploading to qiniu
+    showDialog: false, // the dialog box to upload files
   },
 
   getters: {
@@ -49,6 +52,18 @@ export default {
     },
     EXPIRE_TASKS(state) {
       state.tasksOutdated = true
+    },
+    UPLOAD_SET(state) {
+      state.uploading = true
+    },
+    UPLOAD_CLEAR(state) {
+      state.uploading = false
+    },
+    SHOW_ADD_ENTITIES(state) {
+      state.showDialog = true
+    },
+    HIDE_ADD_ENTITIES(state) {
+      state.showDialog = false
     },
   },
 
@@ -92,6 +107,15 @@ export default {
           )
       }
     },
+    publish({ commit, dispatch }, id) {
+      NProgress.start()
+      return APIService.taskPublish(id)
+        .then(({ data }) => {
+          commit('SET_TASK', data)
+          NProgress.done()
+        })
+        .catch((error) => dispatch('message/pushError', error, { root: true }))
+    },
     claim({ commit, dispatch }, data) {
       NProgress.start()
       return APIService.taskClaim(data.id, data.action)
@@ -109,6 +133,31 @@ export default {
           commit('SET_TASK', data)
           commit('EXPIRE_TASKS')
           NProgress.done()
+        })
+        .catch((error) => dispatch('message/pushError', error, { root: true }))
+    },
+    addEntities({ commit, dispatch }, { request_data, files }) {
+      commit('UPLOAD_SET')
+      return APIService.entitiesCreate(request_data)
+        .then(({ data }) => {
+          const creds = data['credentials']
+          for (const cred of creds) {
+            const file = files.find((file) => file.name === cred['path'])
+            const observable = qiniu.upload(file, cred['key'], cred['token'])
+            observable.subscribe({
+              error: (res) => {
+                commit('UPLOAD_CLEAR')
+                dispatch('message/pushError', res, { root: true })
+                NProgress.done()
+              },
+              // eslint-disable-next-line no-unused-vars
+              complete: (res) => {
+                commit('UPLOAD_CLEAR')
+                commit('SET_TASK', data['task'])
+                commit('HIDE_ADD_ENTITIES')
+              },
+            })
+          }
         })
         .catch((error) => dispatch('message/pushError', error, { root: true }))
     },
