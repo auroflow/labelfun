@@ -65,6 +65,17 @@ const router = new Router({
         requiresAuth: true,
       },
     },
+    {
+      path: '/label/:id',
+      name: 'label',
+      component: () => import('./views/LabelPanel.vue'),
+      props: (route) => ({
+        id: Number(route.params.id),
+      }),
+      meta: {
+        requiresAuth: true,
+      },
+    },
   ],
 })
 

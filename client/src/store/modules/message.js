@@ -7,9 +7,10 @@ const errors = {
   OLD_PASSWORD_REQUIRED: '需要填写原密码。',
   INCORRECT_PASSWORD: '密码错误。',
   UNAUTHORIZED: '无权限。',
-  'Not found': '找不到资源。',
+  'Not Found': '找不到资源。',
   NO_SUCH_TASK: '没有这个任务。',
   TASK_UNDERTAKEN: '任务已领取。',
+  NO_ENTITIES: '任务为空，请先添加图片或视频。',
   TASK_PUBLISHED: '任务已发布。',
   TASK_UNPUBLISHED: '任务未发布。',
   TASK_NOT_LABELED: '任务未标注完成。',
@@ -97,6 +98,11 @@ export default {
         dispatch('push', {
           type: 'error',
           text: '错误 ' + error.response.status + '：' + message,
+        })
+      } else if (error.message) {
+        dispatch('push', {
+          type: 'error',
+          text: '错误：' + error.message,
         })
       } else {
         dispatch('push', {

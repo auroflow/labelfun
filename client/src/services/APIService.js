@@ -14,13 +14,18 @@ const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401) {
       store.dispatch('user/logout')
       error.response.data.message = '登录失效，请重新登录。'
       router.push({ name: 'login' })
     } else return Promise.reject(error)
   }
 )
+
+// eslint-disable-next-line no-unused-vars
+const uploadClient = axios.create({
+  baseURL: 'http://localhost:8080/upload',
+})
 
 export default {
   setAuth(token) {
@@ -58,5 +63,14 @@ export default {
   },
   taskUpdate(id, data) {
     return apiClient.put(`/tasks/${id}`, data)
+  },
+  taskPublish(id) {
+    return apiClient.put(`/tasks/${id}`, { published: true })
+  },
+  entitiesCreate(data) {
+    return apiClient.post('/entities', data)
+  },
+  entityFetch(id) {
+    return apiClient.get(`/entities/${id}`)
   },
 }
