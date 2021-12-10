@@ -1,5 +1,5 @@
 <template>
-  <v-app class="grey darken-2">
+  <v-app>
     <v-navigation-drawer
       :value="true"
       app
@@ -8,13 +8,44 @@
       mini-variant
       mini-variant-width="50"
     >
+      <v-btn tile block text max-width="10" height="50">
+        <v-icon size="30" class="">mdi-arrow-left-circle</v-icon>
+      </v-btn>
     </v-navigation-drawer>
 
     <v-navigation-drawer :value="true" app right width="300" dark stateless>
+      <v-list-item>
+        <v-list-item-title class="text-center">选框信息</v-list-item-title>
+      </v-list-item>
+      <v-list-item>
+        <v-list-item-title class="text-center"
+          >({{ clientX }}, {{ clientY }})</v-list-item-title
+        >
+      </v-list-item>
     </v-navigation-drawer>
 
     <v-main>
-      <v-img :src="baseURL + entity.key"></v-img>
+      <v-sheet
+        id="canvas"
+        height="100vh"
+        class="grey darken-2"
+        @mousedown="startDragImage"
+        @mousemove.prevent="
+          dragImage($event)
+          updateCursorLocation($event)
+        "
+        @mouseup="finishDragImage"
+        @wheel="resizeImage"
+      >
+        <img
+          ref="image"
+          id="image"
+          alt="image"
+          draggable="true"
+          :src="baseURL + entity.key"
+          :style="imgStyle"
+        />
+      </v-sheet>
     </v-main>
   </v-app>
 </template>
@@ -50,6 +81,14 @@ export default {
 
   data: () => ({
     index: 0,
+    dragging: false,
+    imgWidth: 100,
+    imgLeft: 100,
+    imgTop: 50,
+    cursorStartX: null,
+    cursorStartY: null,
+    clientX: null,
+    clientY: null,
   }),
   computed: {
     ...mapState({
@@ -58,6 +97,46 @@ export default {
       user: (state) => state.user.user,
       entity: (state) => state.entity.entity,
     }),
+    ratio() {
+      return this.$refs.image.naturalWidth / this.$refs.image.naturalHeight
+    },
+    imgStyle() {
+      return {
+        position: 'absolute',
+        width: this.imgWidth + 'px',
+        left: this.imgLeft + 'px',
+        top: this.imgTop + 'px',
+      }
+    },
+  },
+  methods: {
+    updateCursorLocation(e) {
+      this.clientX = e.clientX - 50
+      this.clientY = e.clientY
+    },
+    startDragImage(event) {
+      this.dragging = true
+      this.cursorStartX = event.clientX
+      this.cursorStartY = event.clientY
+    },
+    dragImage(e) {
+      if (this.dragging) {
+        // calculate the new cursor position:
+        const cursorDX = e.clientX - this.cursorStartX
+        const cursorDY = e.clientY - this.cursorStartY
+        this.cursorStartX = e.clientX
+        this.cursorStartY = e.clientY
+        // set the element's new position:
+        this.imgLeft += cursorDX
+        this.imgTop += cursorDY
+      }
+    },
+    finishDragImage() {
+      this.dragging = false
+    },
+    resizeImage(event) {
+      this.imgWidth += event.deltaY * -0.2
+    },
   },
   beforeRouteEnter(to, from, next) {
     fetchTaskAndCheckIdentity(to.params.id, next)
@@ -67,3 +146,10 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+#canvas {
+  overflow: hidden;
+  position: relative;
+}
+</style>
