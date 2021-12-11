@@ -96,11 +96,18 @@ class EntityView(MethodView):
         if task.status != JobStatus.UNLABELED:
             abort(400, 'TASK_STATUS_IS_NOT_UNLABELED')
 
+        tipe = data['type']
+        if (task.type == TaskType.IMAGE_CLS and tipe != 'labels') or (
+                task.type == TaskType.IMAGE_SEG and tipe != 'boxes') or (
+                task.type == TaskType.VIDEO_SEG and tipe != 'objects'):
+            abort(400, 'INCOMPATIBLE_ANNOTATION')
+
         annotation = data.get('annotation')
         if not annotation:
             entity.annotation = None
             entity.status = JobStatus.UNLABELED
         else:
+            schema = LabelInSchema()
             entity.annotation = annotation
             entity.status = JobStatus.UNREVIEWED
 

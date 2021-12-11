@@ -25,5 +25,13 @@ export default {
           )
       }
     },
+    labelEntity({ commit, dispatch }, payload) {
+      return APIService.entityLabel(payload.id, payload.data)
+        .then(({ data }) => {
+          commit('task/EXPIRE_TASKS', null, { root: true })
+          commit('SET', data)
+        })
+        .catch((error) => dispatch('message/pushError', error, { root: true }))
+    },
   },
 }

@@ -68,6 +68,9 @@ export default {
   },
 
   actions: {
+    expireTasks({ commit }) {
+      commit('EXPIRE_TASKS')
+    },
     createTask({ commit, dispatch }, data) {
       return APIService.taskCreate(data)
         .then(({ data }) => {

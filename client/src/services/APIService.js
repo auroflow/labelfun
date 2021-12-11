@@ -73,4 +73,7 @@ export default {
   entityFetch(id) {
     return apiClient.get(`/entities/${id}`)
   },
+  entityLabel(id, data) {
+    return apiClient.post(`/entities/${id}`, data)
+  },
 }
