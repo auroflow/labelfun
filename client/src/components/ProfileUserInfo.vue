@@ -158,7 +158,6 @@ export default {
     },
     submit() {
       if (this.$refs.updateInfoForm.validate()) {
-        console.log(this.local_user)
         this.updateInfo()
       }
     },

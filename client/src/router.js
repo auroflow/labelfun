@@ -66,11 +66,12 @@ const router = new Router({
       },
     },
     {
-      path: '/label/:id',
+      path: '/label/:task_id/:entity_idx',
       name: 'label',
       component: () => import('./views/LabelPanel.vue'),
       props: (route) => ({
-        id: Number(route.params.id),
+        task_id: Number(route.params.task_id),
+        entity_idx: Number(route.params.entity_idx),
       }),
       meta: {
         requiresAuth: true,
@@ -84,6 +85,7 @@ router.beforeEach((to, from, next) => {
   const loggedIn = localStorage.getItem('user')
   // protected route
   if (to.matched.some((record) => record.meta.requiresAuth) && !loggedIn) {
+    store.commit('message/POP_ALL')
     store.dispatch('message/push', {
       type: 'error',
       text: '请登录。',

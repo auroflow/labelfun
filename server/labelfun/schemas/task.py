@@ -1,8 +1,11 @@
+import json
+
 from apiflask import PaginationSchema
-from marshmallow import Schema, EXCLUDE, post_load
+from marshmallow import Schema, EXCLUDE, post_load, validates_schema, \
+    ValidationError, post_dump
 from marshmallow.fields import String, List, Integer, Nested, Function, \
-    DateTime, Boolean, Method
-from marshmallow.validate import OneOf, Range
+    DateTime, Boolean, Method, Float
+from marshmallow.validate import OneOf, Range, Length
 
 import labelfun.schemas.user as lsu
 from labelfun.models import TaskType, JobStatus
@@ -22,9 +25,26 @@ class EntityOutSummarySchema(Schema):
     task_id = Integer()
 
 
+class ImageSegmentationSchema(Schema):
+    label = String(required=True)
+    bbox = List(Float, required=True, validate=[Length(min=4, max=4)])
+
+
+class VideoSegmentationSchema(Schema):
+    pass
+
+
 class EntityOutSchema(EntityOutSummarySchema):
-    annotation = String(dump_default="")
+    annotation = String()
     frames = List(String)
+
+    @post_dump
+    def load_annotation(self, data, many, *kwargs):
+        if 'annotation' in data and data['annotation']:
+            data['annotation'] = json.loads(data['annotation'])
+        else:
+            data['annotation'] = []
+        return data
 
 
 # Task creation #
@@ -113,7 +133,7 @@ class TaskOutSchema(TaskOutSummarySchema):
     class Meta:
         unknown = EXCLUDE
 
-    entities = List(Nested(EntityOutSummarySchema))
+    entities = List(Nested(EntityOutSchema))
 
 
 class TaskProcessInSchema(Schema):
@@ -138,7 +158,32 @@ class GetTokenOutSchema(Schema):
 
 
 class LabelInSchema(Schema):
-    annotation = String(required=True)
+    labels = List(String)
+    boxes = List(Nested(ImageSegmentationSchema))
+    objects = List(Nested(VideoSegmentationSchema))
+
+    @validates_schema
+    def validate_fields(self, data, **kwargs):
+        count = 0
+        if 'labels' in data:
+            count += 1
+            data['type'] = 'labels'
+        if 'boxes' in data:
+            count += 1
+            data['type'] = 'boxes'
+        if 'objects' in data:
+            count += 1
+            data['type'] = 'objects'
+        if count != 1:
+            raise ValidationError(
+                "Exactly one of labels, annotation and objects is required.")
+
+    @post_load
+    def parse_annotation(self, item, many, **kwargs):
+        item['annotation'] = json.dumps(item[item['type']])
+
+        del item[item['type']]
+        return item
 
 
 class ReviewInSchema(Schema):

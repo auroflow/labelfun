@@ -1,51 +1,276 @@
 <template>
-  <v-app>
+  <v-app class="grey darken-2">
+    <the-message-bar></the-message-bar>
     <v-navigation-drawer
       :value="true"
       app
       stateless
       dark
       mini-variant
-      mini-variant-width="50"
+      mini-variant-width="50px"
+      @mousemove.prevent
     >
-      <v-btn tile block text max-width="10" height="50">
-        <v-icon size="30" class="">mdi-arrow-left-circle</v-icon>
-      </v-btn>
+      <!-- Go back -->
+      <v-tooltip right color="grey darken-3">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            tile
+            block
+            icon
+            width="50"
+            height="50"
+            v-bind="attrs"
+            v-on="on"
+            :disabled="canvasDrawing"
+            :to="{ name: 'task', params: { id: task_id.toString() } }"
+          >
+            <v-icon dark size="30"> mdi-arrow-left-circle </v-icon>
+          </v-btn>
+        </template>
+        <span>返回</span>
+      </v-tooltip>
+
+      <!-- Add box -->
+      <v-tooltip right color="grey darken-3">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            tile
+            block
+            icon
+            max-width="10"
+            height="50"
+            v-bind="attrs"
+            v-on="on"
+            :disabled="canvasDrawing"
+            @click="toggleLabelChooser"
+          >
+            <v-icon dark size="30"> mdi-vector-square-plus </v-icon>
+          </v-btn>
+        </template>
+        <span>添加选框</span>
+      </v-tooltip>
+
+      <template v-slot:append>
+        <!-- First entity -->
+        <v-tooltip right color="grey darken-3">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              tile
+              block
+              icon
+              max-width="10"
+              height="50"
+              v-bind="attrs"
+              v-on="on"
+              :disabled="entity_idx === 0 || canvasDrawing"
+              @click="goToEntity(0)"
+            >
+              <v-icon dark size="30"> mdi-chevron-double-up </v-icon>
+            </v-btn>
+          </template>
+          <span>第一个</span>
+        </v-tooltip>
+
+        <!-- Previous entity -->
+        <v-tooltip right color="grey darken-3">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              tile
+              block
+              icon
+              max-width="10"
+              height="50"
+              v-bind="attrs"
+              v-on="on"
+              :disabled="entity_idx === 0 || canvasDrawing"
+              @click="goToEntity(entity_idx - 1)"
+            >
+              <v-icon dark size="30"> mdi-chevron-up </v-icon>
+            </v-btn>
+          </template>
+          <span>上一个</span>
+        </v-tooltip>
+
+        <!-- This count -->
+        <v-tooltip right color="grey darken-3">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              tile
+              block
+              icon
+              max-width="10"
+              height="50"
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-icon dark size="30"> mdi-circle-small </v-icon>
+            </v-btn>
+          </template>
+          <span>{{ entity_idx + 1 }} / {{ task.entities.length }}</span>
+        </v-tooltip>
+
+        <!-- Next entity -->
+        <v-tooltip right color="grey darken-3">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              tile
+              block
+              icon
+              max-width="10"
+              height="50"
+              :disabled="
+                entity_idx === task.entities.length - 1 || canvasDrawing
+              "
+              v-bind="attrs"
+              v-on="on"
+              @click="goToEntity(entity_idx + 1)"
+            >
+              <v-icon dark size="30"> mdi-chevron-down </v-icon>
+            </v-btn>
+          </template>
+          <span>下一个</span>
+        </v-tooltip>
+
+        <!-- Last entity -->
+        <v-tooltip right color="grey darken-3">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              tile
+              block
+              icon
+              max-width="10"
+              height="50"
+              :disabled="
+                entity_idx === task.entities.length - 1 || canvasDrawing
+              "
+              v-bind="attrs"
+              v-on="on"
+              @click="goToEntity(task.entities.length - 1)"
+            >
+              <v-icon dark size="30"> mdi-chevron-double-down </v-icon>
+            </v-btn>
+          </template>
+          <span>最后一个</span>
+        </v-tooltip>
+
+        <!-- Save -->
+        <v-tooltip right color="grey darken-3">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              tile
+              block
+              icon
+              max-width="10"
+              height="50"
+              v-bind="attrs"
+              v-on="on"
+              :disabled="canvasDrawing"
+              @click="saveChanges"
+            >
+              <v-icon dark size="30"> mdi-content-save </v-icon>
+            </v-btn>
+          </template>
+          <span>保存</span>
+        </v-tooltip>
+      </template>
     </v-navigation-drawer>
 
-    <v-navigation-drawer :value="true" app right width="300" dark stateless>
+    <v-navigation-drawer
+      :value="true"
+      app
+      right
+      width="300px"
+      dark
+      stateless
+      @mousemove.prevent
+    >
       <v-list-item>
         <v-list-item-title class="text-center">选框信息</v-list-item-title>
       </v-list-item>
-      <v-list-item>
-        <v-list-item-title class="text-center"
-          >({{ clientX }}, {{ clientY }})</v-list-item-title
+      <transition-group name="v-expand-transition">
+        <div
+          v-for="(box, index) in entity.annotation"
+          :key="index"
+          class="mx-4"
         >
-      </v-list-item>
+          <v-alert
+            border="left"
+            :color="box === chosenBox ? 'green darken-2' : 'green'"
+            class="label-selector"
+            dark
+            dense
+            transition="v-expand-transition"
+            @click="chooseBox(box)"
+            v-click-outside="{
+              handler: unchooseBox,
+              include: getIncludedElements,
+            }"
+          >
+            <v-chip
+              :color="box === chosenBox ? 'green' : 'green lighten-2'"
+              class="mr-2"
+              >{{ box.label }}</v-chip
+            >
+            <template v-slot:append>
+              <v-icon @click="deleteBox(box)">mdi-close-circle</v-icon>
+            </template>
+          </v-alert>
+        </div>
+      </transition-group>
     </v-navigation-drawer>
 
     <v-main>
-      <v-sheet
-        id="canvas"
-        height="100vh"
-        class="grey darken-2"
-        @mousedown="startDragImage"
-        @mousemove.prevent="
-          dragImage($event)
-          updateCursorLocation($event)
-        "
-        @mouseup="finishDragImage"
-        @wheel="resizeImage"
-      >
-        <img
-          ref="image"
-          id="image"
-          alt="image"
-          draggable="true"
-          :src="baseURL + entity.key"
-          :style="imgStyle"
-        />
-      </v-sheet>
+      <v-dialog-transition>
+        <v-sheet
+          style="z-index: 100"
+          v-show="showLabels"
+          elevation="10"
+          rounded="xl"
+          width="300"
+          id="label-chooser"
+          @mouseover="inLabelChooser = true"
+          @mouseout="inLabelChooser = false"
+        >
+          <v-sheet class="pa-2 grey darken-3" dark rounded="t-xl">
+            <v-container>
+              <v-row>
+                <p class="text-body-1 my-auto mx-2">选择标签</p>
+                <v-spacer></v-spacer>
+                <v-btn icon @click="closeAndClearLabelChooser">
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
+                <v-btn
+                  class="ml-2"
+                  icon
+                  @click="startDrawing"
+                  :disabled="canvasDrawing || label === -1"
+                >
+                  <v-icon>mdi-check</v-icon>
+                </v-btn>
+              </v-row>
+            </v-container>
+          </v-sheet>
+
+          <v-sheet class="pa-4" rounded="b-xl">
+            <v-chip-group active-class="grey" v-model="label" column>
+              <v-chip v-for="tag in task.labels" class="" :key="tag">
+                {{ tag }}
+              </v-chip>
+            </v-chip-group>
+          </v-sheet>
+        </v-sheet>
+      </v-dialog-transition>
+
+      <label-panel-canvas
+        :in-label-chooser="inLabelChooser"
+        :image="entity"
+        :boxes="entity.annotation"
+        :canvas-drawing="canvasDrawing"
+        :chosen-box="chosenBox"
+        @new-box-drawn="addNewBox"
+        @choose-box="chooseBox"
+        @resize-box="resizeBox"
+      ></label-panel-canvas>
     </v-main>
   </v-app>
 </template>
@@ -53,42 +278,56 @@
 <script>
 import store from '@/store'
 import { mapState } from 'vuex'
+import TheMessageBar from '@/components/TheMessageBar'
+import LabelPanelCanvas from '@/components/LabelPanelCanvas'
 
-function fetchTaskAndCheckIdentity(id, next) {
-  store.dispatch('task/fetchTask', id).then(() => {
-    if (store.state.user.user.id !== store.state.task.task.labeler?.id) {
-      store.dispatch('message/push', {
-        type: 'error',
-        text: '无标注权限。',
-      })
-      next({ name: 'task', params: { id: id.toString() } })
-    } else {
-      const entity = store.state.task.task.entities[0]
-      store.dispatch('entity/fetchEntity', entity.id).then(() => {
-        next()
-      })
-    }
-  })
+function fetchTaskAndEntity(task_id, entity_idx, next) {
+  store
+    .dispatch('task/fetchTask', task_id)
+    .then(() => {
+      if (store.state.user.user.id !== store.state.task.task.labeler?.id) {
+        return Promise.reject({ message: '无标注权限。' })
+      } else {
+        const entities = store.state.task.task.entities
+        if (entity_idx < 0 || entity_idx >= entities.length) {
+          return Promise.reject({ message: '任务无此图片或视频。' })
+        } else {
+          const entity_id = store.state.task.task.entities[entity_idx].id
+          return store.dispatch('entity/fetchEntity', entity_id)
+        }
+      }
+    })
+    .then(() => {
+      next()
+    })
+    .catch((err) => {
+      store.dispatch('message/pushError', err)
+    })
 }
 
 export default {
+  components: {
+    TheMessageBar,
+    LabelPanelCanvas,
+  },
   props: {
-    id: {
+    task_id: {
+      type: Number,
+      required: true,
+    },
+    entity_idx: {
       type: Number,
       required: true,
     },
   },
 
   data: () => ({
-    index: 0,
-    dragging: false,
-    imgWidth: 100,
-    imgLeft: 100,
-    imgTop: 50,
-    cursorStartX: null,
-    cursorStartY: null,
-    clientX: null,
-    clientY: null,
+    dirty: false,
+    label: -1, // chosen label index
+    showLabels: false, // whether the label chooser is shown
+    inLabelChooser: false, // whether the cursor is in label chooser
+    chosenBox: null,
+    canvasDrawing: false,
   }),
   computed: {
     ...mapState({
@@ -97,52 +336,112 @@ export default {
       user: (state) => state.user.user,
       entity: (state) => state.entity.entity,
     }),
-    ratio() {
-      return this.$refs.image.naturalWidth / this.$refs.image.naturalHeight
-    },
-    imgStyle() {
-      return {
-        position: 'absolute',
-        width: this.imgWidth + 'px',
-        left: this.imgLeft + 'px',
-        top: this.imgTop + 'px',
-      }
-    },
   },
   methods: {
-    updateCursorLocation(e) {
-      this.clientX = e.clientX - 50
-      this.clientY = e.clientY
+    chooseBox(box) {
+      this.chosenBox = box
     },
-    startDragImage(event) {
-      this.dragging = true
-      this.cursorStartX = event.clientX
-      this.cursorStartY = event.clientY
+
+    unchooseBox() {
+      this.chosenBox = null
     },
-    dragImage(e) {
-      if (this.dragging) {
-        // calculate the new cursor position:
-        const cursorDX = e.clientX - this.cursorStartX
-        const cursorDY = e.clientY - this.cursorStartY
-        this.cursorStartX = e.clientX
-        this.cursorStartY = e.clientY
-        // set the element's new position:
-        this.imgLeft += cursorDX
-        this.imgTop += cursorDY
+
+    getIncludedElements() {
+      return [...document.getElementsByClassName('label-selector')]
+    },
+
+    closeAndClearLabelChooser() {
+      this.label = -1
+      this.drawing = 0
+      this.showLabels = false
+    },
+
+    toggleLabelChooser() {
+      this.drawing = 0
+      if (this.showLabels) {
+        this.closeAndClearLabelChooser()
+      } else {
+        this.showLabels = true
       }
     },
-    finishDragImage() {
-      this.dragging = false
+
+    startDrawing() {
+      this.canvasDrawing = true
+      this.showLabels = false
+      this.$emit('start-drawing')
     },
-    resizeImage(event) {
-      this.imgWidth += event.deltaY * -0.2
+
+    addNewBox(bbox) {
+      this.dirty = true
+      this.canvasDrawing = false
+      const labelChosen = this.label
+      this.label = -1
+      if (bbox) {
+        const box = {
+          label: this.task.labels[labelChosen],
+          bbox: bbox,
+        }
+        this.$store.dispatch('entity/addBox', box)
+      }
+    },
+
+    resizeBox(e) {
+      this.dirty = true
+      this.$store.dispatch('entity/resizeBox', e)
+    },
+
+    deleteBox(box) {
+      this.dirty = true
+      this.$store.dispatch('entity/deleteBox', box)
+    },
+
+    saveChanges() {
+      return this.$store
+        .dispatch('entity/labelEntity', {
+          id: this.entity.id,
+          data: {
+            boxes: this.entity.annotation,
+          },
+        })
+        .then(() => {
+          this.$store.dispatch('message/pushSuccess', '已保存修改。')
+        })
+        .catch((err) => {
+          this.$store.dispatch('message/pushError', err)
+        })
+    },
+
+    goToEntity(entity_idx) {
+      this.$router.push({
+        name: 'label',
+        params: {
+          task_id: this.task_id.toString(),
+          entity_idx: entity_idx.toString(),
+        },
+      })
+    },
+
+    reset() {
+      this.dirty = false
+      this.label = -1 // chosen label index
+      this.showLabels = false // whether the label chooser is shown
+      this.inLabelChooser = false // whether the cursor is in label chooser
+      this.chosenBox = null
+      this.canvasDrawing = false
     },
   },
   beforeRouteEnter(to, from, next) {
-    fetchTaskAndCheckIdentity(to.params.id, next)
+    fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
   },
   beforeRouteUpdate(to, from, next) {
-    fetchTaskAndCheckIdentity(to.params.id, next)
+    if (this.dirty) {
+      this.saveChanges().then(() => {
+        this.reset()
+        fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
+      })
+    } else {
+      fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
+    }
   },
 }
 </script>
@@ -151,5 +450,35 @@ export default {
 #canvas {
   overflow: hidden;
   position: relative;
+}
+#label-chooser {
+  position: absolute;
+  top: 50px;
+  left: 5px;
+  z-index: 1;
+}
+.vl {
+  position: absolute;
+  border-left-width: 1px;
+  border-left-color: red;
+  height: 100%;
+  z-index: 100;
+}
+.hl {
+  position: absolute;
+  border-top-width: 1px;
+  border-top-color: red;
+  width: 100%;
+  z-index: 100;
+}
+.new-box {
+  position: absolute;
+  border-color: yellowgreen;
+  border-width: 2px;
+}
+.box {
+  position: absolute;
+  border-color: yellowgreen;
+  border-width: 2px;
 }
 </style>
