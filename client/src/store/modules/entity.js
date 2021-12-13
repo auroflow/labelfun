@@ -11,6 +11,9 @@ export default {
     SET(state, data) {
       state.entity = data
     },
+    ADD_BOX(state, box) {
+      state.entity.annotation.push(box)
+    },
   },
 
   actions: {
@@ -23,6 +26,8 @@ export default {
           .catch((error) =>
             dispatch('message/pushError', error, { root: true })
           )
+      } else {
+        return Promise.resolve()
       }
     },
     labelEntity({ commit, dispatch }, payload) {
@@ -32,6 +37,9 @@ export default {
           commit('SET', data)
         })
         .catch((error) => dispatch('message/pushError', error, { root: true }))
+    },
+    addBox({ commit }, box) {
+      commit('ADD_BOX', box)
     },
   },
 }

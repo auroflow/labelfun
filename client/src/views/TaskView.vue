@@ -32,7 +32,7 @@
       <v-btn
         class="mr-2"
         v-if="task.labeler.id === user.id"
-        :to="{ name: 'label', params: { id: task.id } }"
+        :to="{ name: 'label', params: { task_id: task.id, entity_idx: 0 } }"
       >
         去标注
       </v-btn>
