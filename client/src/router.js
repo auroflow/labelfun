@@ -85,6 +85,7 @@ router.beforeEach((to, from, next) => {
   const loggedIn = localStorage.getItem('user')
   // protected route
   if (to.matched.some((record) => record.meta.requiresAuth) && !loggedIn) {
+    store.commit('message/POP_ALL')
     store.dispatch('message/push', {
       type: 'error',
       text: '请登录。',

@@ -40,8 +40,6 @@ class EntityOutSchema(EntityOutSummarySchema):
 
     @post_dump
     def load_annotation(self, data, many, *kwargs):
-        print('data:', data)
-        print('type:', type(data))
         if 'annotation' in data and data['annotation']:
             data['annotation'] = json.loads(data['annotation'])
         else:

@@ -16,7 +16,11 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       store.dispatch('user/logout')
-      error.response.data.message = '登录失效，请重新登录。'
+      store.commit('message/POP_ALL')
+      store.dispatch('message/push', {
+        type: 'error',
+        text: '登录超时，请重新登录。',
+      })
       router.push({ name: 'login' })
     } else return Promise.reject(error)
   }

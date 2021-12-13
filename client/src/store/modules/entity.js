@@ -14,6 +14,14 @@ export default {
     ADD_BOX(state, box) {
       state.entity.annotation.push(box)
     },
+    RESIZE_BOX(state, payload) {
+      state.entity.annotation[payload.index].bbox = payload.bbox
+    },
+    DELETE_BOX(state, boxToDelete) {
+      state.entity.annotation = state.entity.annotation.filter(
+        (box) => box !== boxToDelete
+      )
+    },
   },
 
   actions: {
@@ -40,6 +48,12 @@ export default {
     },
     addBox({ commit }, box) {
       commit('ADD_BOX', box)
+    },
+    resizeBox({ commit }, payload) {
+      commit('RESIZE_BOX', payload)
+    },
+    deleteBox({ commit }, box) {
+      commit('DELETE_BOX', box)
     },
   },
 }

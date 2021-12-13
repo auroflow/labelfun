@@ -106,7 +106,7 @@
               <v-icon dark size="30"> mdi-circle-small </v-icon>
             </v-btn>
           </template>
-          <span>{{ index + 1 }} / {{ task.entities.length }}</span>
+          <span>{{ entity_idx + 1 }} / {{ task.entities.length }}</span>
         </v-tooltip>
 
         <!-- Next entity -->
@@ -187,19 +187,42 @@
       <v-list-item>
         <v-list-item-title class="text-center">选框信息</v-list-item-title>
       </v-list-item>
-      <v-list-item v-for="(box, index) in entity.annotation" :key="index">
-        <v-list-item-title class="text-center"
-          >{{ box.label }}: [{{ Number(box.bbox[0]).toFixed(2) }},
-          {{ Number(box.bbox[1]).toFixed(2) }},
-          {{ Number(box.bbox[2]).toFixed(2) }},
-          {{ Number(box.bbox[3]).toFixed(2) }}]</v-list-item-title
+      <transition-group name="v-expand-transition">
+        <div
+          v-for="(box, index) in entity.annotation"
+          :key="index"
+          class="mx-4"
         >
-      </v-list-item>
+          <v-alert
+            border="left"
+            :color="box === chosenBox ? 'green darken-2' : 'green'"
+            class="label-selector"
+            dark
+            dense
+            transition="v-expand-transition"
+            @click="chooseBox(box)"
+            v-click-outside="{
+              handler: unchooseBox,
+              include: getIncludedElements,
+            }"
+          >
+            <v-chip
+              :color="box === chosenBox ? 'green' : 'green lighten-2'"
+              class="mr-2"
+              >{{ box.label }}</v-chip
+            >
+            <template v-slot:append>
+              <v-icon @click="deleteBox(box)">mdi-close-circle</v-icon>
+            </template>
+          </v-alert>
+        </div>
+      </transition-group>
     </v-navigation-drawer>
 
     <v-main>
       <v-dialog-transition>
         <v-sheet
+          style="z-index: 100"
           v-show="showLabels"
           elevation="10"
           rounded="xl"
@@ -240,9 +263,13 @@
 
       <label-panel-canvas
         :in-label-chooser="inLabelChooser"
-        :entity="entity"
+        :image="entity"
+        :boxes="entity.annotation"
         :canvas-drawing="canvasDrawing"
+        :chosen-box="chosenBox"
         @new-box-drawn="addNewBox"
+        @choose-box="chooseBox"
+        @resize-box="resizeBox"
       ></label-panel-canvas>
     </v-main>
   </v-app>
@@ -311,6 +338,18 @@ export default {
     }),
   },
   methods: {
+    chooseBox(box) {
+      this.chosenBox = box
+    },
+
+    unchooseBox() {
+      this.chosenBox = null
+    },
+
+    getIncludedElements() {
+      return [...document.getElementsByClassName('label-selector')]
+    },
+
     closeAndClearLabelChooser() {
       this.label = -1
       this.drawing = 0
@@ -346,8 +385,17 @@ export default {
       }
     },
 
+    resizeBox(e) {
+      this.dirty = true
+      this.$store.dispatch('entity/resizeBox', e)
+    },
+
+    deleteBox(box) {
+      this.dirty = true
+      this.$store.dispatch('entity/deleteBox', box)
+    },
+
     saveChanges() {
-      console.log('saving...')
       return this.$store
         .dispatch('entity/labelEntity', {
           id: this.entity.id,
@@ -364,7 +412,6 @@ export default {
     },
 
     goToEntity(entity_idx) {
-      console.log('Going to ' + entity_idx)
       this.$router.push({
         name: 'label',
         params: {

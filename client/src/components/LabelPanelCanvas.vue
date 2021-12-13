@@ -7,9 +7,10 @@
     @start-drawing="startDrawing"
     @mousedown="draw"
     @mousemove.prevent="
-      dragImage($event)
+      drag($event)
       updateCursor($event)
     "
+    @mouseup="resizing = ''"
     @wheel="resizeImage"
   >
     <img
@@ -17,7 +18,7 @@
       id="image"
       alt="image"
       draggable="true"
-      :src="baseURL + entity.key"
+      :src="baseURL + image.key"
       :style="imgStyle"
       @load="adjustImage"
     />
@@ -26,18 +27,25 @@
     <div class="hl" :style="hlStyle"></div>
     <div class="new-box" :style="newBoxStyle"></div>
     <label-panel-box
-      v-for="(box, index) in entity.annotation"
+      v-for="(box, index) in boxes"
       :key="index"
       :height="imgHeight"
       :width="imgHeight * imgRatio"
       :left="imgLeft"
       :top="imgTop"
       :box="box"
+      :selected="box === chosenBox"
+      @click="chooseBox(box)"
+      @start-resizing="resizing = $event"
+      @end-resizing="resizing = ''"
     ></label-panel-box>
-    <p style="position: absolute; background-color: azure">
-      Cursor: ({{ cursorX }}, {{ cursorY }}) / ({{
-        Number(relativeX).toFixed(2)
-      }}, {{ Number(relativeY).toFixed(2) }})
+
+    <p
+      style="position: absolute; right: 0px"
+      class="white--text grey darken-2 px-2"
+      v-show="canvasDrawing"
+    >
+      ({{ Number(relativeX).toFixed(3) }}, {{ Number(relativeY).toFixed(3) }})
     </p>
   </v-sheet>
 </template>
@@ -51,8 +59,12 @@ export default {
     LabelPanelBox,
   },
   props: {
-    entity: {
+    image: {
       type: Object,
+      required: true,
+    },
+    boxes: {
+      type: Array,
       required: true,
     },
     inLabelChooser: {
@@ -61,6 +73,10 @@ export default {
     },
     canvasDrawing: {
       type: Boolean,
+      required: true,
+    },
+    chosenBox: {
+      type: Object,
       required: true,
     },
   },
@@ -73,6 +89,7 @@ export default {
 
   data: () => ({
     drawing: 0,
+    resizing: false,
     cursorX: 0,
     cursorY: 0,
     initialCursorX: 0,
@@ -162,14 +179,85 @@ export default {
         this.imgRatio > canvasRatio ? (canvasHeight - this.imgHeight) / 2 : 0
     },
 
-    dragImage(e) {
-      if (e.buttons === 1 && !this.inLabelChooser && !this.drawing) {
+    drag(e) {
+      if (
+        e.buttons === 1 &&
+        !this.inLabelChooser &&
+        !this.drawing &&
+        !this.resizing
+      ) {
+        // drag image
         // calculate the new cursor position:
         const cursorDX = this.cursorX - this.initialCursorX
         const cursorDY = this.cursorY - this.initialCursorY
         // set the element's new position:
         this.imgLeft += cursorDX
         this.imgTop += cursorDY
+      } else if (this.resizing) {
+        // resizing chosen box
+
+        const cursorDX =
+          (this.cursorX - this.initialCursorX) /
+          (this.imgHeight * this.imgRatio)
+        const cursorDY = (this.cursorY - this.initialCursorY) / this.imgHeight
+
+        if (this.resizing === 'upper-left') {
+          const nx = this.chosenBox.bbox[0] + cursorDX
+          const ny = this.chosenBox.bbox[1] + cursorDY
+          const nw = this.chosenBox.bbox[2] - cursorDX
+          const nh = this.chosenBox.bbox[3] - cursorDY
+          console.log('resizing upper left:', nx, ny, nw, nh)
+          if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
+            this.$emit('resize-box', {
+              index: this.boxes.indexOf(this.chosenBox),
+              bbox: [nx, ny, nw, nh],
+            })
+          } else {
+            this.resizing = ''
+          }
+        } else if (this.resizing === 'upper-right') {
+          const nx = this.chosenBox.bbox[0]
+          const ny = this.chosenBox.bbox[1] + cursorDY
+          const nw = this.chosenBox.bbox[2] + cursorDX
+          const nh = this.chosenBox.bbox[3] - cursorDY
+          console.log('resizing upper left:', nx, ny, nw, nh)
+          if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
+            this.$emit('resize-box', {
+              index: this.boxes.indexOf(this.chosenBox),
+              bbox: [nx, ny, nw, nh],
+            })
+          } else {
+            this.resizing = ''
+          }
+        } else if (this.resizing === 'bottom-left') {
+          const nx = this.chosenBox.bbox[0] + cursorDX
+          const ny = this.chosenBox.bbox[1]
+          const nw = this.chosenBox.bbox[2] - cursorDX
+          const nh = this.chosenBox.bbox[3] + cursorDY
+          console.log('resizing upper left:', nx, ny, nw, nh)
+          if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
+            this.$emit('resize-box', {
+              index: this.boxes.indexOf(this.chosenBox),
+              bbox: [nx, ny, nw, nh],
+            })
+          } else {
+            this.resizing = ''
+          }
+        } else if (this.resizing === 'bottom-right') {
+          const nx = this.chosenBox.bbox[0]
+          const ny = this.chosenBox.bbox[1]
+          const nw = this.chosenBox.bbox[2] + cursorDX
+          const nh = this.chosenBox.bbox[3] + cursorDY
+          console.log('resizing upper left:', nx, ny, nw, nh)
+          if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
+            this.$emit('resize-box', {
+              index: this.boxes.indexOf(this.chosenBox),
+              bbox: [nx, ny, nw, nh],
+            })
+          } else {
+            this.resizing = ''
+          }
+        }
       }
       this.initialCursorX = this.cursorX
       this.initialCursorY = this.cursorY
@@ -186,6 +274,7 @@ export default {
 
     startDrawing() {
       this.drawing = 1
+      document.body.style.cursor = 'crosshair'
     },
 
     draw() {
@@ -195,6 +284,7 @@ export default {
         this.newBox.y1 = this.relativeY
       } else if (this.drawing === 2) {
         this.drawing = 0
+        document.body.style.cursor = 'default'
         this.dirty = true
 
         let x1_ = this.newBox.x1
@@ -214,6 +304,10 @@ export default {
           this.$emit('new-box-drawn', null)
         }
       }
+    },
+
+    chooseBox(box) {
+      this.$emit('choose-box', box)
     },
   },
 

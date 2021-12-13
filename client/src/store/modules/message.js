@@ -45,6 +45,9 @@ export default {
     POP(state) {
       state.messages.shift()
     },
+    POP_ALL(state) {
+      state.messages = []
+    },
     SET_POP_INTERVAL(state) {
       if (state.popInterval == null) {
         state.popInterval = setInterval(() => {

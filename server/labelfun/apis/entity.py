@@ -103,7 +103,8 @@ class EntityView(MethodView):
             abort(400, 'INCOMPATIBLE_ANNOTATION')
 
         annotation = data.get('annotation')
-        if not annotation:
+        print('annotation:', annotation)
+        if not annotation or annotation == '[]':
             entity.annotation = None
             entity.status = JobStatus.UNLABELED
         else:
