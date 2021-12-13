@@ -26,22 +26,19 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      x: this.box.bbox[0],
-      y: this.box.bbox[1],
-      w: this.box.bbox[2],
-      h: this.box.bbox[3],
-    }
-  },
+
   computed: {
     boxStyle() {
+      const x = this.box.bbox[0]
+      const y = this.box.bbox[1]
+      const w = this.box.bbox[2]
+      const h = this.box.bbox[3]
       return {
         borderStyle: this.box === this.chosenBox ? 'solid' : 'solid',
-        left: this.left + this.x * this.width + 'px',
-        width: this.w * this.width + 'px',
-        top: this.top + this.y * this.height + 'px',
-        height: this.h * this.height + 'px',
+        left: this.left + x * this.width + 'px',
+        width: w * this.width + 'px',
+        top: this.top + y * this.height + 'px',
+        height: h * this.height + 'px',
       }
     },
   },

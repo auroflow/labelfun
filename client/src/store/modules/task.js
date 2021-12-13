@@ -97,10 +97,12 @@ export default {
           .catch((error) =>
             dispatch('message/pushError', error, { root: true })
           )
+      } else {
+        return Promise.resolve()
       }
     },
     fetchTask({ state, commit, dispatch }, id) {
-      if (state.task?.id !== id) {
+      if (state.task?.id !== id || state.tasksOutdated) {
         return APIService.taskFetch(id)
           .then(({ data }) => {
             commit('SET_TASK', data)
@@ -108,6 +110,8 @@ export default {
           .catch((error) =>
             dispatch('message/pushError', error, { root: true })
           )
+      } else {
+        return Promise.resolve()
       }
     },
     publish({ commit, dispatch }, id) {
