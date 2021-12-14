@@ -221,7 +221,7 @@ export default {
           const nw = this.chosenBox.bbox[2] + cursorDX
           const nh = this.chosenBox.bbox[3] - cursorDY
           console.log('resizing upper left:', nx, ny, nw, nh)
-          if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
+          if (ny >= 0 && nh >= 0 && nw >= 0 && nx + nw <= 1) {
             this.$emit('resize-box', {
               index: this.boxes.indexOf(this.chosenBox),
               bbox: [nx, ny, nw, nh],
@@ -235,7 +235,7 @@ export default {
           const nw = this.chosenBox.bbox[2] - cursorDX
           const nh = this.chosenBox.bbox[3] + cursorDY
           console.log('resizing upper left:', nx, ny, nw, nh)
-          if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
+          if (nx >= 0 && nw >= 0 && nh >= 0 && ny + nh <= 1) {
             this.$emit('resize-box', {
               index: this.boxes.indexOf(this.chosenBox),
               bbox: [nx, ny, nw, nh],
@@ -249,7 +249,7 @@ export default {
           const nw = this.chosenBox.bbox[2] + cursorDX
           const nh = this.chosenBox.bbox[3] + cursorDY
           console.log('resizing upper left:', nx, ny, nw, nh)
-          if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
+          if (nh >= 0 && ny + nh <= 1 && nw >= 0 && nx + nw <= 1) {
             this.$emit('resize-box', {
               index: this.boxes.indexOf(this.chosenBox),
               bbox: [nx, ny, nw, nh],
