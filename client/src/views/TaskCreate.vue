@@ -61,11 +61,11 @@ export default {
           value: 'image_cls',
         },
         {
-          text: '图像分割',
+          text: '图像物体探测',
           value: 'image_seg',
         },
         {
-          text: '视频分割',
+          text: '视频物体探测',
           value: 'video_seg',
         },
       ],

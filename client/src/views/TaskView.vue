@@ -58,7 +58,7 @@
         :key="entity.id"
         class="col-3 col-ms-2 col-lg-1"
       >
-        <v-img :src="baseURL + entity.thumb_key"></v-img>
+        <v-img :src="baseURL + entity.thumb_key"> </v-img>
       </v-col>
     </v-row>
 
@@ -72,7 +72,11 @@
             v-model="files"
             multiple
             small-chips
+            required
           ></v-file-input>
+          <p v-if="task.type === 'video_seg'">
+            视频上传后，将每隔 {{ task.interval }} 秒提取一帧。
+          </p>
         </v-card-text>
         <v-card-actions>
           <v-btn @click="hideAddEntities">取消</v-btn>
@@ -116,8 +120,8 @@ export default {
     return {
       taskTypes: {
         image_cls: '图像分类',
-        image_seg: '图像分割',
-        video_seg: '视频分割',
+        image_seg: '图像物体探测',
+        video_seg: '视频物体探测',
       },
       taskProgresses: {
         unpublished: '尚未发布',
@@ -173,6 +177,13 @@ export default {
         })
     },
     upload() {
+      if (!this.files.length) {
+        this.$store.dispatch('message/push', {
+          text: '请选择文件。',
+          type: 'error',
+        })
+        return
+      }
       const data = {
         task_id: this.task.id,
         paths: [],
@@ -186,10 +197,9 @@ export default {
           files: this.files,
         })
         .then(() => {
-          this.$store.dispatch('message/pushSuccess', '上传成功。')
+          this.$store.dispatch('message/pushSuccess', '上传完成。')
           this.files = []
         })
-        .catch((err) => this.$store.dispatch('message/pushError', err))
     },
     publish() {
       this.$store.dispatch('task/publish', this.task.id).then(() => {

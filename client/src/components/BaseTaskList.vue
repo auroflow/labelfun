@@ -77,8 +77,8 @@ export default {
       tab: null,
       taskTypes: {
         image_cls: '图像分类',
-        image_seg: '图像分割',
-        video_seg: '视频分割',
+        image_seg: '图像物体探测',
+        video_seg: '视频物体探测',
       },
       taskProgresses: {
         unpublished: '尚未发布',
