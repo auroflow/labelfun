@@ -153,18 +153,24 @@ export default {
             const observable = qiniu.upload(file, cred['key'], cred['token'])
             observable.subscribe({
               error: (res) => {
-                commit('UPLOAD_CLEAR')
-                dispatch('message/pushError', res, { root: true })
-                NProgress.done()
+                console.log(cred['path'], 'failed to uploaded as', cred['key'])
+                APIService.entityDelete(cred['key'])
+                dispatch(
+                  'message/pushError',
+                  {
+                    message: `上传 ${cred['path']} 失败：${res.message}`,
+                  },
+                  { root: true }
+                )
               },
-              // eslint-disable-next-line no-unused-vars
               complete: (res) => {
-                commit('UPLOAD_CLEAR')
-                commit('SET_TASK', data['task'])
-                commit('HIDE_ADD_ENTITIES')
+                APIService.entitiesPatch(res.key, res.duration)
               },
             })
           }
+          dispatch('fetchTask', data['task']['id'])
+          commit('UPLOAD_CLEAR')
+          commit('HIDE_ADD_ENTITIES')
         })
         .catch((error) => dispatch('message/pushError', error, { root: true }))
     },

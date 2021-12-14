@@ -1,17 +1,18 @@
 from datetime import datetime
+from pprint import pprint
 
 from apiflask import APIBlueprint, input, output, abort
+from apiflask.schemas import EmptySchema
 from flask import g, current_app
 from flask.views import MethodView
-from qiniu import Auth, urlsafe_base64_encode
+from qiniu import Auth, urlsafe_base64_encode, BucketManager
 
 from labelfun.apis.auth import auth_required
 from labelfun.extensions import db
 from labelfun.models import UserType, JobStatus, TaskType
-from labelfun.models.entity import Entity
-from labelfun.models.task import Task
+from labelfun.models.task import Task, Entity
 from labelfun.schemas.task import GetTokenInSchema, GetTokenOutSchema, \
-    EntityOutSchema, LabelInSchema, ReviewInSchema
+    EntityOutSchema, LabelInSchema, ReviewInSchema, EntityPatchSchema
 
 entity_bp = APIBlueprint('entity', __name__)
 
@@ -32,6 +33,9 @@ class EntitiesView(MethodView):
         credentials = list()
         task_id = data['task_id']
         paths = data['paths']
+        interval = None
+        if 'interval' in data:
+            interval = data['interval']
 
         task = Task.query.get(task_id)
         if task is None:
@@ -47,17 +51,31 @@ class EntitiesView(MethodView):
         # restrict upload types
         mime_limit = 'image/*' if task.type != TaskType.VIDEO_SEG else 'video/*'
 
-        ops = 'imageView2/1/w/100/h/100/format/webp/q/75'
+        ops = 'imageView2/1/w/100/h/100/format/webp/q/75' if task.type != TaskType.VIDEO_SEG else ''
         for path in paths:
             key = urlsafe_base64_encode("&".join([str(task_id),
                                                   path,
                                                   str(datetime.now())]))
             thumb_key = urlsafe_base64_encode(key + '-thumb')
+
+            if task.type != TaskType.VIDEO_SEG:
+                ops = 'imageView2/1/w/100/h/100/format/webp/q/75|saveas/' + urlsafe_base64_encode(
+                    bucket_name + ':' + thumb_key)
+                body = '{"key":$(key),"duration":null}'
+            else:
+                ops = 'vsample/jpg/interval/' + interval + '/pattern/' + urlsafe_base64_encode(
+                    key + '-$(count);')
+                ops = ops + 'vsample/jpg/s/x100/interval/' + interval + '/pattern/' + urlsafe_base64_encode(
+                    thumb_key + '-$(count);')
+                body = '{"key":$(key),"duration":$(avinfo.format.duration)}'
+
             policy = {
-                "persistentOps": ops + "|saveas/" + urlsafe_base64_encode(
-                    bucket_name + ':' + thumb_key),
-                "mimeLimit": mime_limit
+                "persistentOps": ops,
+                "mimeLimit": mime_limit,
+                "returnBody": body,
             }
+            print(f'Policy for {path}:')
+            pprint(policy)
             token = q.upload_token(bucket_name, key, policy=policy)
 
             entity = Entity(key=key, thumb_key=thumb_key, path=path,
@@ -69,6 +87,21 @@ class EntitiesView(MethodView):
                 dict(id=entity.id, path=path, key=key, token=token))
 
         return dict(credentials=credentials, task=task)
+
+    @input(EntityPatchSchema)
+    @output(EmptySchema)
+    @auth_required()
+    def patch(self, data):
+        """Confirm that the entity is uploaded."""
+        key = data['key']
+        entity: Entity = Entity.query.filter_by(key=key).first_or_404()
+        if g.current_user != entity.task.creator and g.current_user.type != UserType.ADMIN:
+            abort(403)
+        entity.uploaded = True
+        if 'duration' in data and data['duration']:
+            entity.frame_count = data['duration'] / entity.task.interval
+        db.session.commit()
+        return {}
 
 
 @entity_bp.route('/<int:entity_id>', endpoint='entity')
@@ -138,3 +171,31 @@ class EntityView(MethodView):
             entity.annotation = None
         db.session.commit()
         return entity
+
+    @output(EmptySchema, 204)
+    def delete(self, entity_id):
+        """Delete an entity."""
+        entity = Entity.query.get_or_404(entity_id)
+        user = g.current_user
+        task = entity.task
+        if user.type != UserType.ADMIN and user != task.reviewer:
+            abort(403)
+        if task.published:
+            abort(400, 'TASK_IS_PUBLISHED')
+
+        if entity.uploaded:
+            access_key = current_app.config['QINIU_ACCESS_KEY']
+            secret_key = current_app.config['QINIU_SECRET_KEY']
+            q = Auth(access_key, secret_key)
+            bucket = BucketManager(q)
+            bucket_name = 'taijian'
+            bucket.delete(bucket_name, entity.key)
+            if task.type != TaskType.VIDEO_SEG:
+                bucket.delete(bucket_name, entity.thumb_key)
+            else:
+                for i in range(1, entity.frame_count + 1):
+                    bucket.delete(bucket_name, entity.key + f'-{i:06d}')
+                    bucket.delete(bucket_name, entity.thumb_key + f'-{i:06d}')
+        db.session.delete(entity)
+        db.session.commit()
+        return {}

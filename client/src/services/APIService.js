@@ -74,10 +74,16 @@ export default {
   entitiesCreate(data) {
     return apiClient.post('/entities', data)
   },
+  entitiesPatch(key, duration) {
+    return apiClient.patch('/entities', { key: key, duration: duration })
+  },
   entityFetch(id) {
     return apiClient.get(`/entities/${id}`)
   },
   entityLabel(id, data) {
     return apiClient.post(`/entities/${id}`, data)
+  },
+  entityDelete(id) {
+    return apiClient.delete(`/entities/${id}`)
   },
 }
