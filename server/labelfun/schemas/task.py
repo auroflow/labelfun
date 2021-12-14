@@ -12,6 +12,7 @@ from labelfun.models import TaskType, JobStatus
 from labelfun.models.task import Task
 
 
+# Retrieving images/videos
 class EntityOutSummarySchema(Schema):
     class Meta:
         unknown = EXCLUDE
@@ -23,15 +24,6 @@ class EntityOutSummarySchema(Schema):
     type = Function(lambda obj: TaskType(obj.type).name.lower())
     status = Function(lambda obj: JobStatus(obj.status).name.lower())
     task_id = Integer()
-
-
-class ImageSegmentationSchema(Schema):
-    label = String(required=True)
-    bbox = List(Float, required=True, validate=[Length(min=4, max=4)])
-
-
-class VideoSegmentationSchema(Schema):
-    pass
 
 
 class EntityOutSchema(EntityOutSummarySchema):
@@ -47,7 +39,7 @@ class EntityOutSchema(EntityOutSummarySchema):
         return data
 
 
-# Task creation #
+# Task creation and modification
 class TaskInSchema(Schema):
     name = String(required=True)
     type = String(required=True, validate=[
@@ -55,6 +47,7 @@ class TaskInSchema(Schema):
               error="Type must be one of image_cls, image_seg and video_seg.")
     ])
     labels = List(String, required=True)
+    interval = Float(allow_none=True)
 
     @post_load
     def to_model(self, data, **kwargs):
@@ -72,6 +65,7 @@ class TaskModifyInSchema(Schema):
     published = Boolean()
 
 
+# Requesting for a task
 class TaskOutSummarySchema(Schema):
     class Meta:
         unknown = EXCLUDE
@@ -92,6 +86,7 @@ class TaskOutSummarySchema(Schema):
     label_done = Function(lambda obj: len(obj.entities) == obj.labeled_count)
     review_done = Function(lambda obj: len(obj.entities) == obj.reviewed_count)
     progress = Method('get_progress')
+    interval = Float()
 
     def get_progress(self, obj: Task):
         if not obj.published:
@@ -109,6 +104,14 @@ class TaskOutSummarySchema(Schema):
         return 'done'
 
 
+class TaskOutSchema(TaskOutSummarySchema):
+    class Meta:
+        unknown = EXCLUDE
+
+    entities = List(Nested(EntityOutSchema))
+
+
+# Tasks query
 class TasksQuerySchema(Schema):
     type = String(allow_none=True,
                   validate=[OneOf(['unlabeled', 'unreviewed', 'done'])])
@@ -129,20 +132,11 @@ class TasksOutSchema(Schema):
     pagination = Nested(PaginationSchema)
 
 
-class TaskOutSchema(TaskOutSummarySchema):
-    class Meta:
-        unknown = EXCLUDE
-
-    entities = List(Nested(EntityOutSchema))
-
-
-class TaskProcessInSchema(Schema):
-    type = String(required=True, validate=[OneOf(['label', 'review'])])
-
-
+# Request token for uploading images/videos
 class GetTokenInSchema(Schema):
     task_id = Integer(required=True)
     paths = List(String, required=True)
+    interval = Integer(allow_none=True)
 
 
 class TokenOutSchema(Schema):
@@ -155,6 +149,33 @@ class TokenOutSchema(Schema):
 class GetTokenOutSchema(Schema):
     credentials = List(Nested(TokenOutSchema))
     task = Nested(TaskOutSchema)
+
+
+# Confirm the completion of uploading files
+class EntityPatchSchema(Schema):
+    key = String(required=True)
+    duration = Float(allow_none=True)
+
+
+# Claim or complete a task
+class TaskProcessInSchema(Schema):
+    type = String(required=True, validate=[OneOf(['label', 'review'])])
+
+
+# Label
+class ImageSegmentationSchema(Schema):
+    label = String(required=True)
+    bbox = List(Float, required=True, validate=[Length(min=4, max=4)])
+
+
+class TrajectorySchema(Schema):
+    frame_number = Integer(required=True)
+    bbox = List(Float, required=True, validate=[Length(min=4, max=4)])
+
+
+class VideoSegmentationSchema(Schema):
+    label = String(required=True)
+    trajectory = List(Nested(TrajectorySchema), required=True)
 
 
 class LabelInSchema(Schema):
@@ -186,5 +207,6 @@ class LabelInSchema(Schema):
         return item
 
 
+# Review
 class ReviewInSchema(Schema):
     review = String(required=True, validate=[OneOf(['correct', 'incorrect'])])

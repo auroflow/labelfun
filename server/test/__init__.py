@@ -7,8 +7,7 @@ from flask import url_for
 
 from labelfun import create_app
 from labelfun.extensions import db
-from labelfun.models.entity import Entity
-from labelfun.models.task import Task
+from labelfun.models.task import Task, Entity
 from labelfun.models.user import User
 from labelfun.settings import config
 

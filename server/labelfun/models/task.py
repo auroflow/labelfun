@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from sqlalchemy import event
+from sqlalchemy.util import symbol
+
 from labelfun.extensions import db
 from labelfun.models import TaskType, JobStatus
 
@@ -30,7 +33,56 @@ class Task(db.Model):
     labeled_count: int = db.Column(db.Integer, default=0)
     reviewed_count: int = db.Column(db.Integer, default=0)
 
+    # For video tasks
+    interval: int = db.Column(db.Float)
+
     def __init__(self, labels, **kwargs):
         super(Task, self).__init__(**kwargs)
         if labels is not None and len(labels):
             self.labels = ','.join(labels)
+
+
+class Entity(db.Model):
+    __tablename__ = 'entity'
+
+    id: int = db.Column(db.Integer, primary_key=True)
+    path: str = db.Column(db.String, nullable=False)
+    key: str = db.Column(db.String, nullable=False)
+    thumb_key: str = db.Column(db.String, nullable=False)
+    type: TaskType = db.Column(db.Integer, nullable=False)
+    status: JobStatus = db.Column(db.Integer, default=JobStatus.UNLABELED)
+    annotation: str = db.Column(db.Text)
+    uploaded: bool = db.Column(db.Boolean, default=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    task = db.relationship('Task', back_populates='entities')
+
+    # For video tasks
+    frame_count = db.Column(db.Integer)
+
+
+@event.listens_for(Entity.status, 'set')
+def update_task_status(target, value, oldvalue, initiator):
+    task = target.task
+    if oldvalue == value:
+        pass
+    elif oldvalue == JobStatus.UNLABELED and value == JobStatus.UNREVIEWED:
+        task.labeled_count += 1
+    elif oldvalue == JobStatus.UNREVIEWED and value == JobStatus.DONE:
+        task.reviewed_count += 1
+    elif oldvalue == JobStatus.UNREVIEWED and value == JobStatus.UNLABELED:
+        task.labeled_count -= 1
+    elif oldvalue != symbol('NO_VALUE'):
+        raise ValueError(
+            'Entity status cannot switch from ' + str(oldvalue) + ' to ' + str(
+                value))
+
+# class Frame(db.Model):
+#     __tablename__ = 'frame'
+#
+#     id: int = db.Column(db.Integer, primary_key=True)
+#     frame_number: int = db.Column(db.Integer, nullable=False)
+#     key: str = db.Column(db.String, nullable=True)
+#     thumb_key: str = db.Column(db.String, nullable=True)
+#     entity_id: int = db.Column(db.Integer, db.ForeignKey('entity.id'),
+#                                nullable=False)
+#     entity = db.relationship('Entity', back_populates='frames')

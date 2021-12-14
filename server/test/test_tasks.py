@@ -2,9 +2,9 @@ from datetime import datetime
 
 from flask import url_for
 
+from labelfun import Entity
 from labelfun.extensions import db
 from labelfun.models import JobStatus
-from labelfun.models.entity import Entity
 from labelfun.models.task import Task
 from test import BaseTestCase
 
