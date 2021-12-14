@@ -1,6 +1,6 @@
 <template>
   <v-container mt-5>
-    <p class="text-h4">任务详情</p>
+    <p class="text-h4">{{ task.name }} - 任务详情</p>
     <p>类型：{{ taskTypes[task.type] }}</p>
     <p>发布者：{{ task.creator.name }}</p>
     <p v-if="task.labeler">标注者：{{ task.labeler.name }}</p>
@@ -21,7 +21,9 @@
       v-if="task.progress === 'unpublished' && task.creator.id === user.id"
     >
       <v-btn class="mr-2" @click="showAddEntities"> 添加{{ ENTITY }} </v-btn>
+      <v-btn class="mr-2" @click="showModify">修改任务</v-btn>
       <v-btn class="mr-2" @click="publish">发布任务</v-btn>
+      <v-btn class="mr-2 warning" @click="deleteTask">删除任务</v-btn>
     </template>
 
     <template v-if="task.progress === 'unlabeled'">
@@ -58,7 +60,25 @@
         :key="entity.id"
         class="col-3 col-ms-2 col-lg-1"
       >
-        <v-img :src="baseURL + entity.thumb_key"> </v-img>
+        <v-hover>
+          <template v-slot:default="{ hover }">
+            <v-img
+              :src="
+                baseURL +
+                entity.thumb_key +
+                (task.type === 'video_seg' ? '-000001' : '')
+              "
+            >
+              <v-fade-transition>
+                <v-overlay v-if="hover" absolute color="#036358">
+                  <v-icon color="warning" @click="deleteEntity(entity.id)"
+                    >mdi-close-circle</v-icon
+                  >
+                </v-overlay>
+              </v-fade-transition>
+            </v-img>
+          </template>
+        </v-hover>
       </v-col>
     </v-row>
 
@@ -96,12 +116,49 @@
         ></v-progress-linear>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="modifying" persistent max-width="400px">
+      <v-form>
+        <v-card>
+          <v-card-title>修改任务信息</v-card-title>
+          <v-card-text>
+            <v-text-field v-model="newName" label="任务名" required>
+            </v-text-field>
+            <v-combobox
+              label="可供标注的标签"
+              v-model="newLabels"
+              multiple
+              :append-icon="null"
+              required
+              chips
+              deletable-chips
+            >
+              <template v-slot:no-data>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title
+                      >按 <kbd>回车</kbd> 添加新标签</v-list-item-title
+                    >
+                  </v-list-item-content>
+                </v-list-item>
+              </template>
+            </v-combobox>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn @click="modifying = false">取消</v-btn>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="modifyTask">保存</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
   </v-container>
 </template>
 
 <script>
 import store from '@/store'
 import { mapMutations, mapState } from 'vuex'
+import NProgress from 'nprogress'
 
 function fetchTask(id, next) {
   store.dispatch('task/fetchTask', id).then(() => {
@@ -132,6 +189,9 @@ export default {
         done: '已完成',
       },
       files: [],
+      modifying: false,
+      newName: null,
+      newLabels: [],
     }
   },
   computed: {
@@ -202,14 +262,61 @@ export default {
         })
     },
     publish() {
-      this.$store.dispatch('task/publish', this.task.id).then(() => {
-        this.$store.dispatch('message/pushSuccess', '任务发布成功。')
-      })
+      if (
+        window.confirm(`确定发布此任务吗？发布之后不能撤销，也不能删除此任务。`)
+      ) {
+        this.$store.dispatch('task/publish', this.task.id).then(() => {
+          this.$store.dispatch('message/pushSuccess', '任务发布成功。')
+        })
+      }
     },
     ...mapMutations('task', {
       showAddEntities: 'SHOW_ADD_ENTITIES',
       hideAddEntities: 'HIDE_ADD_ENTITIES',
     }),
+    deleteTask() {
+      if (
+        window.confirm(
+          `确定删除此任务吗？此任务下的所有${this.ENTITY}也将删除。`
+        )
+      ) {
+        this.$store.dispatch('task/deleteTask', this.task.id).then(() => {
+          this.$store.dispatch('message/pushSuccess', '任务已删除。')
+          this.$router.push({ name: 'home' })
+        })
+      }
+    },
+    deleteEntity(id) {
+      if (window.confirm(`确定删除此${this.ENTITY}吗？`)) {
+        this.$store.dispatch('task/deleteEntity', id).then(() => {
+          this.$store.dispatch('message/pushSuccess', `${this.ENTITY}已删除。`)
+        })
+      }
+    },
+    showModify() {
+      this.newLabels = [...this.task.labels]
+      this.newName = this.task.name
+      this.modifying = true
+    },
+    modifyTask() {
+      NProgress.start()
+      const data = {
+        labels: this.newLabels,
+        name: this.newName,
+      }
+      this.$store
+        .dispatch('task/updateTask', {
+          id: this.task.id,
+          task: data,
+        })
+        .then(() => {
+          this.$store.dispatch('message/pushSuccess', '任务修改成功。')
+          this.modifying = false
+        })
+        .finally(() => {
+          NProgress.done()
+        })
+    },
   },
 }
 </script>

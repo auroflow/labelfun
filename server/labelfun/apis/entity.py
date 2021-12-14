@@ -3,7 +3,6 @@ from datetime import datetime
 from pprint import pprint
 
 from apiflask import APIBlueprint, input, output, abort
-from apiflask.schemas import EmptySchema
 from flask import g, current_app
 from flask.views import MethodView
 from qiniu import Auth, urlsafe_base64_encode, BucketManager
@@ -13,7 +12,8 @@ from labelfun.extensions import db
 from labelfun.models import UserType, JobStatus, TaskType
 from labelfun.models.task import Task, Entity
 from labelfun.schemas.task import GetTokenInSchema, GetTokenOutSchema, \
-    EntityOutSchema, LabelInSchema, ReviewInSchema, EntityPatchSchema
+    EntityOutSchema, LabelInSchema, ReviewInSchema, EntityPatchSchema, \
+    TaskOutSummarySchema
 
 entity_bp = APIBlueprint('entity', __name__)
 
@@ -52,10 +52,12 @@ class EntitiesView(MethodView):
 
         ops = 'imageView2/1/w/100/h/100/format/webp/q/75' if task.type != TaskType.VIDEO_SEG else ''
         for path in paths:
-            key = urlsafe_base64_encode("&".join([str(task_id),
-                                                  path,
-                                                  str(datetime.now())]))
-            thumb_key = urlsafe_base64_encode(key + '-thumb')
+            key = str(task_id) + urlsafe_base64_encode("&".join([
+                path,
+                str(datetime.now())]))
+            thumb_key = str(task_id) + urlsafe_base64_encode("&".join([
+                path,
+                str(datetime.now())]) + '-thumb')
 
             if task.type != TaskType.VIDEO_SEG:
                 ops = 'imageView2/1/w/100/h/100/format/webp/q/75|saveas/' + urlsafe_base64_encode(
@@ -101,8 +103,8 @@ class EntitiesView(MethodView):
             abort(403)
         entity.uploaded = True
         if 'duration' in data and data['duration']:
-            entity.frame_count = math.floor(
-                data['duration'] / entity.task.interval)
+            entity.frame_count = max(math.floor(
+                data['duration'] / entity.task.interval) - 1, 1)
         print(entity.frame_count, "frames in total.")
         db.session.commit()
         return entity
@@ -176,13 +178,15 @@ class EntityView(MethodView):
         db.session.commit()
         return entity
 
-    @output(EmptySchema, 204)
+    @output(TaskOutSummarySchema)
+    @auth_required()
     def delete(self, entity_id):
         """Delete an entity."""
         entity = Entity.query.get_or_404(entity_id)
         user = g.current_user
         task = entity.task
-        if user.type != UserType.ADMIN and user != task.reviewer:
+        task_id = task.id
+        if user.type != UserType.ADMIN and user != task.creator:
             abort(403)
         if task.published:
             abort(400, 'TASK_IS_PUBLISHED')
@@ -193,13 +197,21 @@ class EntityView(MethodView):
             q = Auth(access_key, secret_key)
             bucket = BucketManager(q)
             bucket_name = 'taijian'
-            bucket.delete(bucket_name, entity.key)
-            if task.type != TaskType.VIDEO_SEG:
-                bucket.delete(bucket_name, entity.thumb_key)
-            else:
-                for i in range(1, entity.frame_count + 1):
-                    bucket.delete(bucket_name, entity.key + f'-{i:06d}')
-                    bucket.delete(bucket_name, entity.thumb_key + f'-{i:06d}')
+
+            def delete_prefix(prefix):
+                marker = None
+                while True:
+                    ret, eof, _ = bucket.list(bucket_name, prefix, marker)
+                    for item in ret.get('items'):
+                        bucket.delete(bucket_name, item.get('key'))
+                    if not eof:
+                        marker = ret.get('marker')
+                    else:
+                        break
+
+            delete_prefix(entity.key)
+            delete_prefix(entity.thumb_key)
+
         db.session.delete(entity)
         db.session.commit()
-        return {}
+        return Task.query.get(task_id)

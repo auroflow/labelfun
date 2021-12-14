@@ -8,7 +8,7 @@ const apiClient = axios.create({
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
-  timeout: 5000,
+  timeout: 10000,
 })
 
 apiClient.interceptors.response.use(
@@ -70,6 +70,9 @@ export default {
   },
   taskPublish(id) {
     return apiClient.put(`/tasks/${id}`, { published: true })
+  },
+  taskDelete(id) {
+    return apiClient.delete('/tasks/' + id)
   },
   entitiesCreate(data) {
     return apiClient.post('/entities', data)

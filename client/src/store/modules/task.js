@@ -65,6 +65,14 @@ export default {
     HIDE_ADD_ENTITIES(state) {
       state.showDialog = false
     },
+    DELETE_LOCAL_ENTITY(state, id) {
+      if (state.task) {
+        state.task.entities = state.task.entities.filter(
+          (entity) => entity.id !== id
+        )
+        state.task.entity_count -= 1
+      }
+    },
   },
 
   actions: {
@@ -119,6 +127,27 @@ export default {
       return APIService.taskPublish(id)
         .then(({ data }) => {
           commit('SET_TASK', data)
+          commit('EXPIRE_TASKS')
+          NProgress.done()
+        })
+        .catch((error) => dispatch('message/pushError', error, { root: true }))
+    },
+    deleteTask({ commit, dispatch }, id) {
+      NProgress.start()
+      return APIService.taskDelete(id)
+        .then(() => {
+          commit('SET_TASK', null)
+          commit('EXPIRE_TASKS')
+          NProgress.done()
+        })
+        .catch((error) => dispatch('message/pushError', error, { root: true }))
+    },
+    deleteEntity({ commit, dispatch }, id) {
+      NProgress.start()
+      return APIService.entityDelete(id)
+        .then(() => {
+          commit('DELETE_LOCAL_ENTITY', id)
+          commit('EXPIRE_TASKS')
           NProgress.done()
         })
         .catch((error) => dispatch('message/pushError', error, { root: true }))
@@ -147,6 +176,7 @@ export default {
       commit('UPLOAD_SET')
       return APIService.entitiesCreate(request_data)
         .then(({ data }) => {
+          console.log('here')
           commit('SET_TASK', data['task'])
           const creds = data['credentials']
           for (const cred of creds) {
@@ -169,6 +199,7 @@ export default {
               },
             })
           }
+          console.log('there')
           commit('UPLOAD_CLEAR')
           commit('HIDE_ADD_ENTITIES')
         })

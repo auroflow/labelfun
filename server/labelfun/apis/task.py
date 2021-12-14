@@ -2,8 +2,9 @@ from datetime import datetime
 
 from apiflask import APIBlueprint, input, output, abort, pagination_builder
 from apiflask.schemas import EmptySchema
-from flask import g
+from flask import g, current_app
 from flask.views import MethodView
+from qiniu import BucketManager, Auth
 from sqlalchemy import desc
 
 from labelfun.apis.auth import auth_required
@@ -65,9 +66,9 @@ class TaskView(MethodView):
             abort(400, "TASK_PUBLISHED")
         if data.get('published') is not None and not len(task.entities):
             abort(400, "NO_ENTITIES")
-        
+
         task.name = data.get('name', task.name)
-        if 'label' in data:
+        if 'labels' in data:
             task.labels = ','.join(data['labels'])
         task.published = data.get('published', task.published)
         db.session.commit()
@@ -111,6 +112,29 @@ class TaskView(MethodView):
             abort(404)
         if g.current_user.id != task.creator_id and g.current_user.type != UserType.ADMIN:
             abort(403, message="UNAUTHORIZED")
+
+        access_key = current_app.config['QINIU_ACCESS_KEY']
+        secret_key = current_app.config['QINIU_SECRET_KEY']
+        q = Auth(access_key, secret_key)
+        bucket = BucketManager(q)
+        bucket_name = 'taijian'
+        for entity in task.entities:
+            if entity.uploaded:
+                def delete_prefix(prefix):
+                    marker = None
+                    while True:
+                        ret, eof, _ = bucket.list(bucket_name, prefix, marker)
+                        for item in ret.get('items'):
+                            bucket.delete(bucket_name, item.get('key'))
+                        if not eof:
+                            marker = ret.get('marker')
+                        else:
+                            break
+
+                delete_prefix(entity.key)
+                delete_prefix(entity.thumb_key)
+
+            db.session.delete(entity)
         db.session.delete(task)
         db.session.commit()
         return {}
