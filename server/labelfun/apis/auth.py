@@ -14,7 +14,7 @@ auth_bp = APIBlueprint('auth', __name__)
 
 
 def generate_token(user):
-    expiration = 3600
+    expiration = 14400
     s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
     token = s.dumps({'id': user.id}).decode('ascii')
     return token, expiration
