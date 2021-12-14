@@ -75,8 +75,7 @@ export default {
     push({ commit }, message) {
       commit('PUSH', message)
       commit('SET_POP_INTERVAL')
-      if (message.type !== 'error') return Promise.resolve(message)
-      else return Promise.reject(message)
+      return Promise.resolve(message)
     },
     pop({ state, commit }) {
       commit('POP')
