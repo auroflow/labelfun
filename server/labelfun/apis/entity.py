@@ -1,3 +1,4 @@
+import math
 from datetime import datetime
 from pprint import pprint
 
@@ -33,11 +34,9 @@ class EntitiesView(MethodView):
         credentials = list()
         task_id = data['task_id']
         paths = data['paths']
-        interval = None
-        if 'interval' in data:
-            interval = data['interval']
-
         task = Task.query.get(task_id)
+        interval = task.interval
+
         if task is None:
             abort(404, 'NO_SUCH_TASK')
         if task.creator_id != g.current_user.id and g.current_user.type != UserType.ADMIN:
@@ -63,10 +62,12 @@ class EntitiesView(MethodView):
                     bucket_name + ':' + thumb_key)
                 body = '{"key":$(key),"duration":null}'
             else:
-                ops = 'vsample/jpg/interval/' + interval + '/pattern/' + urlsafe_base64_encode(
-                    key + '-$(count);')
-                ops = ops + 'vsample/jpg/s/x100/interval/' + interval + '/pattern/' + urlsafe_base64_encode(
-                    thumb_key + '-$(count);')
+                ops = 'vsample/jpg/interval/' + str(
+                    interval) + '/pattern/' + urlsafe_base64_encode(
+                    key + '-$(count)') + ';'
+                ops += 'vsample/jpg/s/x100/interval/' + str(
+                    interval) + '/pattern/' + urlsafe_base64_encode(
+                    thumb_key + '-$(count)')
                 body = '{"key":$(key),"duration":$(avinfo.format.duration)}'
 
             policy = {
@@ -89,19 +90,22 @@ class EntitiesView(MethodView):
         return dict(credentials=credentials, task=task)
 
     @input(EntityPatchSchema)
-    @output(EmptySchema)
+    @output(EntityOutSchema)
     @auth_required()
     def patch(self, data):
         """Confirm that the entity is uploaded."""
+        print(f'Received ({data["key"]}, {data["duration"]})')
         key = data['key']
         entity: Entity = Entity.query.filter_by(key=key).first_or_404()
         if g.current_user != entity.task.creator and g.current_user.type != UserType.ADMIN:
             abort(403)
         entity.uploaded = True
         if 'duration' in data and data['duration']:
-            entity.frame_count = data['duration'] / entity.task.interval
+            entity.frame_count = math.floor(
+                data['duration'] / entity.task.interval)
+        print(entity.frame_count, "frames in total.")
         db.session.commit()
-        return {}
+        return entity
 
 
 @entity_bp.route('/<int:entity_id>', endpoint='entity')

@@ -24,6 +24,8 @@ class EntityOutSummarySchema(Schema):
     type = Function(lambda obj: TaskType(obj.type).name.lower())
     status = Function(lambda obj: JobStatus(obj.status).name.lower())
     task_id = Integer()
+    uploaded = Boolean()
+    frame_count = Integer()
 
 
 class EntityOutSchema(EntityOutSummarySchema):
@@ -108,7 +110,7 @@ class TaskOutSchema(TaskOutSummarySchema):
     class Meta:
         unknown = EXCLUDE
 
-    entities = List(Nested(EntityOutSchema))
+    entities = List(Nested(EntityOutSummarySchema))
 
 
 # Tasks query

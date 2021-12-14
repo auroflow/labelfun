@@ -40,6 +40,19 @@
         </v-col>
       </v-row>
       <v-row>
+        <v-col>
+          <v-slider
+            label="视频每帧间隔（秒）"
+            v-model="newTask.interval"
+            v-if="newTask.type === 'video_seg'"
+            min="0.1"
+            step="0.1"
+            max="5"
+            thumb-label="always"
+          ></v-slider>
+        </v-col>
+      </v-row>
+      <v-row>
         <v-btn @click.prevent="submit">创建任务</v-btn>
       </v-row>
     </v-form>
@@ -54,6 +67,7 @@ export default {
         name: '',
         type: null,
         labels: [],
+        interval: 0.5,
       },
       taskTypes: [
         {

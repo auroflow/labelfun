@@ -147,6 +147,7 @@ export default {
       commit('UPLOAD_SET')
       return APIService.entitiesCreate(request_data)
         .then(({ data }) => {
+          commit('SET_TASK', data['task'])
           const creds = data['credentials']
           for (const cred of creds) {
             const file = files.find((file) => file.name === cred['path'])
@@ -168,7 +169,6 @@ export default {
               },
             })
           }
-          dispatch('fetchTask', data['task']['id'])
           commit('UPLOAD_CLEAR')
           commit('HIDE_ADD_ENTITIES')
         })
