@@ -66,9 +66,21 @@ const router = new Router({
       },
     },
     {
-      path: '/label/:task_id/:entity_idx',
-      name: 'label',
-      component: () => import('./views/LabelPanel.vue'),
+      path: '/label-img/:task_id/:entity_idx',
+      name: 'label-img',
+      component: () => import('./views/LabelPanelImage.vue'),
+      props: (route) => ({
+        task_id: Number(route.params.task_id),
+        entity_idx: Number(route.params.entity_idx),
+      }),
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/label-vid/:task_id/:entity_idx',
+      name: 'label-vid',
+      component: () => import('./views/LabelPanelVideo.vue'),
       props: (route) => ({
         task_id: Number(route.params.task_id),
         entity_idx: Number(route.params.entity_idx),

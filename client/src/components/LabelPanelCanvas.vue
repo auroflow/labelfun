@@ -18,7 +18,7 @@
       id="image"
       alt="image"
       draggable="true"
-      :src="baseURL + image.key"
+      :src="url ? url : baseURL + image.key"
       :style="imgStyle"
       @load="adjustImage"
     />
@@ -78,6 +78,9 @@ export default {
     chosenBox: {
       type: Object,
       required: true,
+    },
+    url: {
+      type: String,
     },
   },
 

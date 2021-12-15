@@ -22,7 +22,7 @@
     >
       <v-btn class="mr-2" @click="showAddEntities"> 添加{{ ENTITY }} </v-btn>
       <v-btn class="mr-2" @click="showModify">修改任务</v-btn>
-      <v-btn class="mr-2" @click="publish">发布任务</v-btn>
+      <v-btn class="mr-2 green" dark @click="publish">发布任务</v-btn>
       <v-btn class="mr-2 warning" @click="deleteTask">删除任务</v-btn>
     </template>
 
@@ -34,7 +34,10 @@
       <v-btn
         class="mr-2"
         v-if="task.labeler.id === user.id"
-        :to="{ name: 'label', params: { task_id: task.id, entity_idx: 0 } }"
+        :to="{
+          name: label[task.type],
+          params: { task_id: task.id, entity_idx: 0 },
+        }"
       >
         去标注
       </v-btn>
@@ -70,7 +73,11 @@
               "
             >
               <v-fade-transition>
-                <v-overlay v-if="hover" absolute color="#036358">
+                <v-overlay
+                  v-if="task.published ? false : hover"
+                  absolute
+                  color="#036358"
+                >
                   <v-icon color="warning" @click="deleteEntity(entity.id)"
                     >mdi-close-circle</v-icon
                   >
@@ -179,6 +186,11 @@ export default {
         image_cls: '图像分类',
         image_seg: '图像物体探测',
         video_seg: '视频物体探测',
+      },
+      label: {
+        image_cls: 'label-cls',
+        image_seg: 'label-img',
+        video_seg: 'label-vid',
       },
       taskProgresses: {
         unpublished: '尚未发布',

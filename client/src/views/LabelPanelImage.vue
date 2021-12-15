@@ -368,7 +368,6 @@ export default {
     startDrawing() {
       this.canvasDrawing = true
       this.showLabels = false
-      this.$emit('start-drawing')
     },
 
     addNewBox(bbox) {
@@ -413,7 +412,7 @@ export default {
 
     goToEntity(entity_idx) {
       this.$router.push({
-        name: 'label',
+        name: 'label-img',
         params: {
           task_id: this.task_id.toString(),
           entity_idx: entity_idx.toString(),

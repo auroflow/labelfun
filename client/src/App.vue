@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <template v-if="$route.name !== 'label'">
+    <template v-if="!$route.name.startsWith('label')">
       <nav-bar :name="name"></nav-bar>
       <v-main>
         <message-bar></message-bar>
