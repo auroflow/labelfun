@@ -82,6 +82,10 @@ export default {
     url: {
       type: String,
     },
+    isVideo: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   watch: {
@@ -166,6 +170,7 @@ export default {
     adjustImage() {
       let canvasWidth = document.getElementById('canvas').offsetWidth
       let canvasHeight = document.getElementById('canvas').offsetHeight
+      if (this.isVideo) canvasHeight -= 40
       let canvasRatio = canvasWidth / canvasHeight
       this.imgRatio =
         this.$refs.image.naturalWidth / this.$refs.image.naturalHeight

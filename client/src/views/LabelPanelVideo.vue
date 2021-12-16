@@ -408,6 +408,7 @@
         :boxes="entity.annotation"
         :canvas-drawing="canvasDrawing"
         :chosen-box="chosenObject"
+        :is-video="true"
         @new-box-drawn="addNewBox"
         @choose-box="chooseBox"
         @resize-box="resizeBox"
