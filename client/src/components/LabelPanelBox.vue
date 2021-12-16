@@ -1,5 +1,10 @@
 <template>
-  <div class="box label-selector" :style="boxStyle" @click="$emit('click')">
+  <div
+    v-if="box"
+    class="box label-selector"
+    :style="boxStyle"
+    @click="$emit('clicked')"
+  >
     <div
       class="box-corner upper-left"
       v-show="selected"
@@ -25,10 +30,9 @@
       :style="[bottomRightStyle]"
     ></div>
     <p class="box-caption" v-show="selected" :style="{ top: boxStyle.height }">
-      x: {{ Number(box.bbox[0]).toFixed(3) }} y:
-      {{ Number(box.bbox[1]).toFixed(3) }} w:
-      {{ Number(box.bbox[2]).toFixed(3) }} h:
-      {{ Number(box.bbox[3]).toFixed(3) }}
+      x: {{ Number(box[0]).toFixed(3) }} y: {{ Number(box[1]).toFixed(3) }} w:
+      {{ Number(box[2]).toFixed(3) }} h:
+      {{ Number(box[3]).toFixed(3) }}
     </p>
   </div>
 </template>
@@ -37,7 +41,7 @@
 export default {
   props: {
     box: {
-      type: Object,
+      type: Array,
       required: true,
     },
     top: {
@@ -68,10 +72,10 @@ export default {
 
   computed: {
     boxStyle() {
-      const x = this.box.bbox[0]
-      const y = this.box.bbox[1]
-      const w = this.box.bbox[2]
-      const h = this.box.bbox[3]
+      const x = this.box[0]
+      const y = this.box[1]
+      const w = this.box[2]
+      const h = this.box[3]
       return {
         borderStyle: this.selected ? 'solid' : 'dashed',
         backgroundColor: this.selected
@@ -145,7 +149,7 @@ export default {
 }
 .box-caption {
   position: absolute;
-  left: 0px;
+  left: 0;
   background-color: yellowgreen;
   color: white;
   font-size: 12px;

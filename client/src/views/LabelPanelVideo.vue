@@ -200,7 +200,7 @@
             dark
             dense
             transition="v-expand-transition"
-            @click="chooseBox(object)"
+            @click="chooseBox(index)"
             v-click-outside="{
               handler: unchooseBox,
               include: getIncludedElements,
@@ -269,7 +269,7 @@
     <v-footer
       app
       color="grey darken-3"
-      class="d-flex justify-center"
+      class="d-flex justify-center playback-controller"
       dark
       padless
       inset
@@ -405,12 +405,13 @@
         :in-label-chooser="inLabelChooser"
         :image="entity"
         :url="imgURL"
-        :boxes="entity.annotation"
+        :objects="entity.annotation"
+        :current-frame="current_frame"
         :canvas-drawing="canvasDrawing"
-        :chosen-box="chosenObject"
+        :chosen-box="getChosenBox"
         :is-video="true"
         @new-box-drawn="addNewBox"
-        @choose-box="chooseBox"
+        @choose-box="chooseBox($event)"
         @resize-box="resizeBox"
       ></label-panel-canvas>
     </v-main>
@@ -487,10 +488,16 @@ export default {
         this.current_frame.toString().padStart(6, '0')
       )
     },
+    getChosenBox() {
+      return this.chosenObject?.trajectory.find(
+        (snapshot) => snapshot.frame_number === this.current_frame
+      )?.bbox
+    },
   },
   methods: {
-    chooseBox(object) {
-      this.chosenObject = object
+    chooseBox(index) {
+      console.log('choosing', this.entity.annotation[index])
+      this.chosenObject = this.entity.annotation[index]
     },
 
     unchooseBox() {
@@ -498,7 +505,10 @@ export default {
     },
 
     getIncludedElements() {
-      return [...document.getElementsByClassName('label-selector')]
+      return [
+        ...document.getElementsByClassName('label-selector'),
+        ...document.getElementsByClassName('playback-controller'),
+      ]
     },
 
     closeAndClearLabelChooser() {
@@ -551,7 +561,10 @@ export default {
 
     resizeBox(e) {
       this.dirty = true
-      this.$store.dispatch('entity/resizeBox', e)
+      this.$store.dispatch('entity/resizeBoxInObject', {
+        ...e,
+        frame_number: this.current_frame,
+      })
     },
 
     deleteBox(object) {
@@ -573,7 +586,7 @@ export default {
         .dispatch('entity/labelEntity', {
           id: this.entity.id,
           data: {
-            boxes: this.entity.annotation,
+            objects: this.entity.annotation,
           },
         })
         .then(() => {
@@ -586,7 +599,7 @@ export default {
 
     goToEntity(entity_idx) {
       this.$router.push({
-        name: 'label-img',
+        name: 'label-vid',
         params: {
           task_id: this.task_id.toString(),
           entity_idx: entity_idx.toString(),
@@ -601,6 +614,7 @@ export default {
       this.inLabelChooser = false // whether the cursor is in label chooser
       this.chosenObject = null
       this.canvasDrawing = false
+      this.current_frame = 1
     },
   },
   beforeRouteEnter(to, from, next) {
@@ -613,6 +627,7 @@ export default {
         fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
       })
     } else {
+      this.reset()
       fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
     }
   },

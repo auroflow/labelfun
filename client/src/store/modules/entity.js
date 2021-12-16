@@ -32,6 +32,11 @@ export default {
     ADD_BOX_TO_OBJECT(state, payload) {
       payload.object.trajectory.push(payload.snapshot)
     },
+    RESIZE_BOX_IN_OBJECT(state, payload) {
+      state.entity.annotation[payload.index].trajectory.find(
+        (snapshot) => snapshot.frame_number === payload.frame_number
+      ).bbox = payload.bbox
+    },
     DELETE_BOX_IN_FRAME(state, payload) {
       payload.object.trajectory = payload.object.trajectory.filter(
         (snapshot) => snapshot.frame_number !== payload.frame_number
@@ -91,9 +96,14 @@ export default {
       commit('ADD_BOX_TO_OBJECT', payload)
     },
 
+    resizeBoxInObject({ commit }, payload) {
+      commit('RESIZE_BOX_IN_OBJECT', payload)
+    },
+
     deleteBoxInFrame({ commit }, payload) {
       commit('DELETE_BOX_IN_FRAME', payload)
     },
+
     deleteObject({ commit }, objectToDelete) {
       commit('DELETE_OBJECT', objectToDelete)
     },
