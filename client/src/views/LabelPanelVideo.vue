@@ -319,8 +319,11 @@
             v-bind="attrs"
             v-on="on"
             :disabled="canvasDrawing"
+            @click="playOrStop"
           >
-            <v-icon size="40px"> mdi-play </v-icon>
+            <v-icon size="40px">
+              {{ playing ? 'mdi-stop' : 'mdi-play' }}
+            </v-icon>
           </v-btn>
         </template>
         <span>{{ current_frame }} / {{ entity.frame_count }}</span>
@@ -465,6 +468,8 @@ export default {
   },
 
   data: () => ({
+    playing: false,
+    intervalHandler: null,
     current_frame: 1,
     dirty: false,
     label: -1, // chosen label index
@@ -615,6 +620,29 @@ export default {
       this.chosenObject = null
       this.canvasDrawing = false
       this.current_frame = 1
+      this.playing = false
+    },
+
+    play() {
+      this.playing = true
+      this.intervalHandler = setInterval(() => {
+        if (this.current_frame === this.entity.frame_count) {
+          this.playing = false
+          clearInterval(this.intervalHandler)
+        } else {
+          this.current_frame++
+        }
+      }, 75)
+    },
+
+    stop() {
+      this.playing = false
+      clearInterval(this.intervalHandler)
+    },
+
+    playOrStop() {
+      if (this.playing) this.stop()
+      else this.play()
     },
   },
   beforeRouteEnter(to, from, next) {

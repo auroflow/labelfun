@@ -12,6 +12,15 @@ export default {
       state.entity = data
     },
 
+    // for image classification
+    ADD_LABEL(state, label) {
+      state.entity.annotation.push(label)
+    },
+    DELETE_LABEL(state, label) {
+      state.entity.annotation = state.entity.annotation.filter(
+        (elem) => elem !== label
+      )
+    },
     // for image object detection
     ADD_BOX(state, box) {
       state.entity.annotation.push(box)
@@ -72,6 +81,13 @@ export default {
         .catch((error) => dispatch('message/pushError', error, { root: true }))
     },
 
+    // for image classification
+    addLabel({ commit }, label) {
+      commit('ADD_LABEL', label)
+    },
+    deleteLabel({ commit }, label) {
+      commit('DELETE_LABEL', label)
+    },
     // for image object detection
     addBox({ commit }, box) {
       commit('ADD_BOX', box)

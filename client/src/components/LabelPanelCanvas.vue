@@ -121,14 +121,14 @@ export default {
     bboxes() {
       if (this.boxes) {
         return this.boxes.map((box) => box.bbox)
-      } else {
+      } else if (this.objects) {
         return this.objects.map(
           (object) =>
             object.trajectory.find(
               (snapshot) => snapshot.frame_number === this.currentFrame
             )?.bbox
         )
-      }
+      } else return []
     },
     relativeX() {
       return (this.cursorX - this.imgLeft) / (this.imgHeight * this.imgRatio)
