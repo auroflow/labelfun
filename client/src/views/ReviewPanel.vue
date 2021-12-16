@@ -2,14 +2,8 @@
   <v-app class="grey darken-2">
     <the-message-bar></the-message-bar>
 
-    <v-footer
-      app
-      class="d-flex justify-center playback-controller"
-      dark
-      padless
-      inset
-    >
-      <v-tooltip top color="grey darken-3">
+    <v-footer app class="d-flex justify-center" dark padless inset>
+      <v-tooltip z-index="300" top color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -27,7 +21,7 @@
         <span>返回</span>
       </v-tooltip>
 
-      <v-tooltip top color="grey darken-3">
+      <v-tooltip z-index="300" top color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -45,7 +39,7 @@
         <span>第一个</span>
       </v-tooltip>
 
-      <v-tooltip top color="grey darken-3">
+      <v-tooltip z-index="300" top color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -62,7 +56,7 @@
         </template>
         <span>上一个</span>
       </v-tooltip>
-      <v-tooltip top color="grey darken-3">
+      <v-tooltip z-index="300" top color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn tile icon width="40" height="40" v-bind="attrs" v-on="on">
             <v-icon size="40px"> mdi-circle-small </v-icon>
@@ -70,7 +64,7 @@
         </template>
         <span>{{ entity_idx + 1 }} / {{ task.entity_count }}</span>
       </v-tooltip>
-      <v-tooltip top color="grey darken-3">
+      <v-tooltip z-index="300" top color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -87,7 +81,7 @@
         </template>
         <span>下一个</span>
       </v-tooltip>
-      <v-tooltip top color="grey darken-3">
+      <v-tooltip z-index="300" top color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -113,91 +107,99 @@
         :labels="labels"
       ></review-panel-canvas>
 
-      <v-card color="rgb(128,128,128, 0.75)" class="playback-controller">
+      <v-card
+        class="rounded-pill playback-controller"
+        color="rgb(128,128,128, 0.75)"
+      >
         <v-card-actions>
-          <v-tooltip top color="grey darken-3">
+          <v-tooltip z-index="300" top color="grey darken-3">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
                 icon
-                width="40"
-                height="40"
+                width="20"
+                height="20"
+                class="mx-auto"
                 v-bind="attrs"
                 v-on="on"
                 :disabled="currentFrame === 1"
                 @click="currentFrame = 1"
               >
-                <v-icon size="40"> mdi-skip-backward </v-icon>
+                <v-icon size="25px"> mdi-skip-backward </v-icon>
               </v-btn>
             </template>
             <span>第一帧</span>
           </v-tooltip>
 
-          <v-tooltip top color="grey darken-3">
+          <v-tooltip z-index="300" top color="grey darken-3">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
                 icon
-                width="40"
-                height="40"
+                width="20"
+                height="20"
+                class="mx-auto"
                 v-bind="attrs"
                 v-on="on"
                 :disabled="currentFrame === 1"
                 @click="currentFrame--"
               >
-                <v-icon size="40px"> mdi-skip-previous </v-icon>
+                <v-icon size="25px"> mdi-skip-previous </v-icon>
               </v-btn>
             </template>
             <span>上一帧</span>
           </v-tooltip>
-          <v-tooltip top color="grey darken-3">
+          <v-tooltip z-index="300" top color="grey darken-3">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
                 icon
-                width="40"
-                height="40"
+                width="20"
+                height="20"
+                class="mx-auto"
                 v-bind="attrs"
                 v-on="on"
                 @click="playOrStop"
               >
-                <v-icon size="40px">
+                <v-icon size="25px">
                   {{ playing ? 'mdi-stop' : 'mdi-play' }}
                 </v-icon>
               </v-btn>
             </template>
             <span>{{ currentFrame }} / {{ entity.frame_count }}</span>
           </v-tooltip>
-          <v-tooltip top color="grey darken-3">
+          <v-tooltip z-index="300" top color="grey darken-3">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
                 icon
-                width="40"
-                height="40"
+                width="20"
+                height="20"
+                class="mx-auto"
                 v-bind="attrs"
                 v-on="on"
                 :disabled="currentFrame === entity.frame_count"
                 @click="currentFrame++"
               >
-                <v-icon size="40px"> mdi-skip-next </v-icon>
+                <v-icon size="25px"> mdi-skip-next </v-icon>
               </v-btn>
             </template>
             <span>下一帧</span>
           </v-tooltip>
-          <v-tooltip top color="grey darken-3">
+          <v-tooltip z-index="300" top color="grey darken-3">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
                 icon
-                width="40"
-                height="40"
+                width="20"
+                height="20"
+                class="mx-auto"
                 v-bind="attrs"
                 v-on="on"
                 :disabled="currentFrame === entity.frame_count"
                 @click="currentFrame = entity.frame_count"
               >
-                <v-icon size="40px"> mdi-skip-forward </v-icon>
+                <v-icon size="25px"> mdi-skip-forward </v-icon>
               </v-btn>
             </template>
             <span>最后一帧</span>
@@ -342,6 +344,7 @@ export default {
 
     reset() {
       this.dirty = false
+      this.currentFrame = 1
     },
 
     play() {
@@ -372,21 +375,15 @@ export default {
   },
 
   beforeRouteUpdate(to, from, next) {
-    if (this.dirty) {
-      this.saveChanges().then(() => {
-        this.reset()
-        fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
-      })
-    } else {
-      this.reset()
-      fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
-    }
+    this.reset()
+    fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
   },
 }
 </script>
 
 <style scoped>
 .review-buttons {
+  z-index: 200;
   position: absolute;
   bottom: 50px;
   left: 0;
@@ -396,7 +393,13 @@ export default {
   width: 200px;
 }
 .playback-controller {
+  z-index: 200;
   position: absolute;
-  bottom: 100px;
+  bottom: 110px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  width: 200px;
 }
 </style>

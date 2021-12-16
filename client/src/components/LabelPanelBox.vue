@@ -161,13 +161,11 @@ export default {
   left: 0;
   background-color: #739b24;
   color: white;
-  top: -20px;
   font-size: 12px;
   padding: 0 2px;
 }
 .box-caption {
   position: absolute;
-  left: 0;
   background-color: yellowgreen;
   color: white;
   font-size: 12px;
