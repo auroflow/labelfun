@@ -101,6 +101,18 @@ const router = new Router({
         requiresAuth: true,
       },
     },
+    {
+      path: '/review/:task_id/:entity_idx',
+      name: 'review',
+      component: () => import('./views/ReviewPanel.vue'),
+      props: (route) => ({
+        task_id: Number(route.params.task_id),
+        entity_idx: Number(route.params.entity_idx),
+      }),
+      meta: {
+        requiresAuth: true,
+      },
+    },
   ],
 })
 

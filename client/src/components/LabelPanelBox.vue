@@ -5,6 +5,7 @@
     :style="boxStyle"
     @click="$emit('clicked')"
   >
+    <p v-if="reviewMode" class="box-label">{{ label }}</p>
     <div
       class="box-corner upper-left"
       v-show="selected"
@@ -63,6 +64,14 @@ export default {
     selected: {
       type: Boolean,
       required: true,
+    },
+    reviewMode: {
+      type: Boolean,
+      default: false,
+    },
+    label: {
+      type: String,
+      required: false,
     },
   },
 
@@ -146,6 +155,15 @@ export default {
 .bottom-right {
   right: -6px;
   bottom: -6px;
+}
+.box-label {
+  position: absolute;
+  left: 0;
+  background-color: #739b24;
+  color: white;
+  top: -20px;
+  font-size: 12px;
+  padding: 0 2px;
 }
 .box-caption {
   position: absolute;

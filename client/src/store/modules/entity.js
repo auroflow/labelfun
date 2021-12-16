@@ -123,5 +123,15 @@ export default {
     deleteObject({ commit }, objectToDelete) {
       commit('DELETE_OBJECT', objectToDelete)
     },
+
+    // for review
+    reviewEntity({ commit, dispatch }, payload) {
+      return APIService.entityReview(payload.id, payload.data)
+        .then(({ data }) => {
+          commit('task/EXPIRE_TASKS', null, { root: true })
+          commit('SET', data)
+        })
+        .catch((error) => dispatch('message/pushError', error, { root: true }))
+    },
   },
 }

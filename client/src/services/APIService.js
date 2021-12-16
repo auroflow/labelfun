@@ -86,6 +86,9 @@ export default {
   entityLabel(id, data) {
     return apiClient.post(`/entities/${id}`, data)
   },
+  entityReview(id, data) {
+    return apiClient.put(`/entities/${id}`, data)
+  },
   entityDelete(id) {
     return apiClient.delete(`/entities/${id}`)
   },
