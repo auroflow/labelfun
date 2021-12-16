@@ -6,7 +6,7 @@
     <template v-slot:default="{ items }">
       <v-container>
         <v-row>
-          <v-col v-for="task in items" :key="task.id" cols="6">
+          <v-col v-for="task in items" :key="task.id" cols="12" lg="6">
             <v-card>
               <v-card-title>{{ task.name }}</v-card-title>
               <v-card-text>

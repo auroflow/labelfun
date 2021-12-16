@@ -286,7 +286,7 @@
             :disabled="canvasDrawing || current_frame === 1"
             @click="current_frame = 1"
           >
-            <v-icon size="40"> mdi-chevron-double-left </v-icon>
+            <v-icon size="40"> mdi-skip-backward </v-icon>
           </v-btn>
         </template>
         <span>第一帧</span>
@@ -304,7 +304,7 @@
             :disabled="current_frame === 1"
             @click="current_frame--"
           >
-            <v-icon size="40px"> mdi-chevron-left </v-icon>
+            <v-icon size="40px"> mdi-skip-previous </v-icon>
           </v-btn>
         </template>
         <span>上一帧</span>
@@ -340,7 +340,7 @@
             :disabled="canvasDrawing || current_frame === entity.frame_count"
             @click="current_frame++"
           >
-            <v-icon size="40px"> mdi-chevron-right </v-icon>
+            <v-icon size="40px"> mdi-skip-next </v-icon>
           </v-btn>
         </template>
         <span>下一帧</span>
@@ -357,7 +357,7 @@
             :disabled="canvasDrawing || current_frame === entity.frame_count"
             @click="current_frame = entity.frame_count"
           >
-            <v-icon size="40px"> mdi-chevron-double-right </v-icon>
+            <v-icon size="40px"> mdi-skip-forward </v-icon>
           </v-btn>
         </template>
         <span>最后一帧</span>
@@ -632,7 +632,7 @@ export default {
         } else {
           this.current_frame++
         }
-      }, 75)
+      }, 100)
     },
 
     stop() {
