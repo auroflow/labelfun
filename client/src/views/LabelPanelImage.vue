@@ -266,7 +266,7 @@
         :image="entity"
         :boxes="entity.annotation"
         :canvas-drawing="canvasDrawing"
-        :chosen-box="chosenBox"
+        :chosen-box="getChosenBox"
         @new-box-drawn="addNewBox"
         @choose-box="chooseBox"
         @resize-box="resizeBox"
@@ -336,14 +336,17 @@ export default {
       user: (state) => state.user.user,
       entity: (state) => state.entity.entity,
     }),
+    getChosenBox() {
+      return this.chosenBox?.bbox
+    },
   },
   methods: {
-    chooseBox(box) {
-      this.chosenBox = box
+    chooseBox(index) {
+      this.chosenBox = this.entity.annotation[index]
     },
 
     unchooseBox() {
-      this.chosenBox = null
+      if (!this.canvasDrawing) this.chosenBox = null
     },
 
     getIncludedElements() {
