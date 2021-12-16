@@ -389,6 +389,7 @@ export default {
         fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
       })
     } else {
+      this.reset()
       fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
     }
   },
