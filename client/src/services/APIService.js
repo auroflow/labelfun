@@ -26,11 +26,6 @@ apiClient.interceptors.response.use(
   }
 )
 
-// eslint-disable-next-line no-unused-vars
-const uploadClient = axios.create({
-  baseURL: 'http://localhost:8080/upload',
-})
-
 export default {
   setAuth(token) {
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`

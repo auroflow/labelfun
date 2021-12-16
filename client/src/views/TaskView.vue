@@ -61,6 +61,13 @@
       >
         去审核
       </v-btn>
+      <v-btn
+        class="mr-2"
+        v-if="task.review_done"
+        @click="completeTask('review')"
+      >
+        提交审核结果
+      </v-btn>
     </template>
 
     <template v-if="task.progress === 'done'">
@@ -272,7 +279,7 @@ export default {
             let success = null
             if (this.task.status === 'unlabeled')
               success = '提交成功，等待标注者修改。'
-            else if (this.task.tatus === 'unreviewed')
+            else if (this.task.status === 'unreviewed')
               success = '提交成功，请等待审核结果。'
             else success = '提交成功！该任务已完成。'
             this.$store.dispatch('message/pushSuccess', success)

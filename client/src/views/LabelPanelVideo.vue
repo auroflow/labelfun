@@ -663,38 +663,10 @@ export default {
 </script>
 
 <style scoped>
-#canvas {
-  overflow: hidden;
-  position: relative;
-}
 #label-chooser {
   position: absolute;
   top: 50px;
   left: 5px;
   z-index: 1;
-}
-.vl {
-  position: absolute;
-  border-left-width: 1px;
-  border-left-color: red;
-  height: 100%;
-  z-index: 100;
-}
-.hl {
-  position: absolute;
-  border-top-width: 1px;
-  border-top-color: red;
-  width: 100%;
-  z-index: 100;
-}
-.new-box {
-  position: absolute;
-  border-color: yellowgreen;
-  border-width: 2px;
-}
-.box {
-  position: absolute;
-  border-color: yellowgreen;
-  border-width: 2px;
 }
 </style>
