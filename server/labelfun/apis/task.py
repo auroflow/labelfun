@@ -94,8 +94,17 @@ class TaskView(MethodView):
                 abort(403)
             if task.status != JobStatus.UNREVIEWED:
                 abort(400, 'TASK_STATUS_IS_NOT_UNREVIEWED')
-            if task.labeled_count != task.reviewed_count:
+            if task.reviewed_count != len(task.entities):
                 abort(400, 'JOB_IS_NOT_DONE')
+            for entity in task.entities:
+                if entity.status == JobStatus.REVIEWED:
+                    if entity.review:
+                        entity.status = JobStatus.DONE
+                    else:
+                        entity.status = JobStatus.UNLABELED
+                        entity.annotation = None
+                        task.reviewed_count -= 1
+                        task.labeled_count -= 1
             if task.reviewed_count == len(task.entities):
                 task.status = JobStatus.DONE
             else:

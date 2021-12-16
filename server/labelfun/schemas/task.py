@@ -26,6 +26,7 @@ class EntityOutSummarySchema(Schema):
     task_id = Integer()
     uploaded = Boolean()
     frame_count = Integer()
+    review = Boolean()
 
 
 class EntityOutSchema(EntityOutSummarySchema):

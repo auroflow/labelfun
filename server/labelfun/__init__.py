@@ -3,6 +3,7 @@ import os
 import click
 from apiflask import APIFlask
 from flask.cli import load_dotenv
+from qiniu import Auth, BucketManager
 
 from labelfun.apis import api_bp
 from labelfun.extensions import db
@@ -55,6 +56,25 @@ def register_commands(app: APIFlask):
         db.session.commit()
         db.drop_all()
         db.create_all()
+        access_key = os.getenv('QINIU_ACCESS_KEY')
+        secret_key = os.getenv('QINIU_SECRET_KEY')
+        q = Auth(access_key, secret_key)
+        bucket = BucketManager(q)
+        bucket_name = 'taijian'
+
+        def delete_prefix(prefix):
+            marker = None
+            while True:
+                ret, eof, _ = bucket.list(bucket_name, prefix, marker)
+                for item in ret.get('items'):
+                    bucket.delete(bucket_name, item.get('key'))
+                if not eof:
+                    marker = ret.get('marker')
+                else:
+                    break
+
+        delete_prefix("")
+
         user1 = User(id=1001, name='Amy', password='12345678',
                      email='amy@email.com', type=0)
         user2 = User(id=1002, name='Bob', password=r'!@#$%^&*',

@@ -16,4 +16,4 @@ class JobStatus(IntEnum):
     UNLABELED = 0
     UNREVIEWED = 1
     DONE = 2
-    EMPTY = 3
+    REVIEWED = 3
