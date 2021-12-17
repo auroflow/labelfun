@@ -21,7 +21,6 @@
             height="50"
             v-bind="attrs"
             v-on="on"
-            :disabled="canvasDrawing"
             :to="{ name: 'task', params: { id: task_id.toString() } }"
           >
             <v-icon dark size="30"> mdi-arrow-left-circle </v-icon>
@@ -41,7 +40,6 @@
             height="50"
             v-bind="attrs"
             v-on="on"
-            :disabled="canvasDrawing"
             @click="toggleLabelChooser"
           >
             <v-icon dark size="30"> mdi-vector-square-plus </v-icon>
@@ -62,7 +60,7 @@
               height="50"
               v-bind="attrs"
               v-on="on"
-              :disabled="entity_idx === 0 || canvasDrawing"
+              :disabled="entity_idx === 0"
               @click="goToEntity(0)"
             >
               <v-icon dark size="30"> mdi-chevron-double-up </v-icon>
@@ -82,7 +80,7 @@
               height="50"
               v-bind="attrs"
               v-on="on"
-              :disabled="entity_idx === 0 || canvasDrawing"
+              :disabled="entity_idx === 0"
               @click="goToEntity(entity_idx - 1)"
             >
               <v-icon dark size="30"> mdi-chevron-up </v-icon>
@@ -118,9 +116,7 @@
               icon
               max-width="10"
               height="50"
-              :disabled="
-                entity_idx === task.entities.length - 1 || canvasDrawing
-              "
+              :disabled="entity_idx === task.entities.length - 1"
               v-bind="attrs"
               v-on="on"
               @click="goToEntity(entity_idx + 1)"
@@ -140,9 +136,7 @@
               icon
               max-width="10"
               height="50"
-              :disabled="
-                entity_idx === task.entities.length - 1 || canvasDrawing
-              "
+              :disabled="entity_idx === task.entities.length - 1"
               v-bind="attrs"
               v-on="on"
               @click="goToEntity(task.entities.length - 1)"
@@ -164,7 +158,6 @@
               height="50"
               v-bind="attrs"
               v-on="on"
-              :disabled="canvasDrawing"
               @click="saveChanges"
             >
               <v-icon dark size="30"> mdi-content-save </v-icon>
@@ -185,34 +178,25 @@
       @mousemove.prevent
     >
       <v-list-item>
-        <v-list-item-title class="text-center">选框信息</v-list-item-title>
+        <v-list-item-title class="text-center">分类信息</v-list-item-title>
       </v-list-item>
       <transition-group name="v-expand-transition">
         <div
-          v-for="(box, index) in entity.annotation"
+          v-for="(label, index) in entity.annotation"
           :key="index"
           class="mx-4"
         >
           <v-alert
             border="left"
-            :color="box === chosenBox ? 'green darken-2' : 'green'"
+            color="green"
             class="label-selector"
             dark
             dense
             transition="v-expand-transition"
-            @click="chooseBox(box)"
-            v-click-outside="{
-              handler: unchooseBox,
-              include: getIncludedElements,
-            }"
           >
-            <v-chip
-              :color="box === chosenBox ? 'green' : 'green lighten-2'"
-              class="mr-2"
-              >{{ box.label }}</v-chip
-            >
+            <v-chip color="green lighten-2" class="mr-2">{{ label }}</v-chip>
             <template v-slot:append>
-              <v-icon @click="deleteBox(box)">mdi-close-circle</v-icon>
+              <v-icon @click="deleteLabel(label)">mdi-close-circle</v-icon>
             </template>
           </v-alert>
         </div>
@@ -242,8 +226,8 @@
                 <v-btn
                   class="ml-2"
                   icon
-                  @click="startDrawing"
-                  :disabled="canvasDrawing || label === -1"
+                  @click="addLabel"
+                  :disabled="label === -1"
                 >
                   <v-icon>mdi-check</v-icon>
                 </v-btn>
@@ -253,23 +237,24 @@
 
           <v-sheet class="pa-4" rounded="b-xl">
             <v-chip-group active-class="grey" v-model="label" column>
-              <v-chip v-for="tag in task.labels" class="" :key="tag">
+              <v-chip
+                v-for="tag in task.labels"
+                class=""
+                :key="tag"
+                :disabled="entity.annotation.find((element) => element === tag)"
+              >
                 {{ tag }}
               </v-chip>
             </v-chip-group>
           </v-sheet>
         </v-sheet>
       </v-dialog-transition>
-
       <label-panel-canvas
         :in-label-chooser="inLabelChooser"
         :image="entity"
-        :boxes="entity.annotation"
-        :canvas-drawing="canvasDrawing"
-        :chosen-box="chosenBox"
-        @new-box-drawn="addNewBox"
-        @choose-box="chooseBox"
-        @resize-box="resizeBox"
+        :boxes="null"
+        :canvas-drawing="false"
+        :chosen-box="null"
       ></label-panel-canvas>
     </v-main>
   </v-app>
@@ -326,8 +311,6 @@ export default {
     label: -1, // chosen label index
     showLabels: false, // whether the label chooser is shown
     inLabelChooser: false, // whether the cursor is in label chooser
-    chosenBox: null,
-    canvasDrawing: false,
   }),
   computed: {
     ...mapState({
@@ -338,26 +321,12 @@ export default {
     }),
   },
   methods: {
-    chooseBox(box) {
-      this.chosenBox = box
-    },
-
-    unchooseBox() {
-      this.chosenBox = null
-    },
-
-    getIncludedElements() {
-      return [...document.getElementsByClassName('label-selector')]
-    },
-
     closeAndClearLabelChooser() {
       this.label = -1
-      this.drawing = 0
       this.showLabels = false
     },
 
     toggleLabelChooser() {
-      this.drawing = 0
       if (this.showLabels) {
         this.closeAndClearLabelChooser()
       } else {
@@ -365,34 +334,16 @@ export default {
       }
     },
 
-    startDrawing() {
-      this.canvasDrawing = true
-      this.showLabels = false
-      this.$emit('start-drawing')
-    },
-
-    addNewBox(bbox) {
+    addLabel() {
       this.dirty = true
-      this.canvasDrawing = false
-      const labelChosen = this.label
+      this.$store.dispatch('entity/addLabel', this.task.labels[this.label])
       this.label = -1
-      if (bbox) {
-        const box = {
-          label: this.task.labels[labelChosen],
-          bbox: bbox,
-        }
-        this.$store.dispatch('entity/addBox', box)
-      }
+      this.showLabels = false
     },
 
-    resizeBox(e) {
+    deleteLabel(label) {
       this.dirty = true
-      this.$store.dispatch('entity/resizeBox', e)
-    },
-
-    deleteBox(box) {
-      this.dirty = true
-      this.$store.dispatch('entity/deleteBox', box)
+      this.$store.dispatch('entity/deleteLabel', label)
     },
 
     saveChanges() {
@@ -400,7 +351,7 @@ export default {
         .dispatch('entity/labelEntity', {
           id: this.entity.id,
           data: {
-            boxes: this.entity.annotation,
+            labels: this.entity.annotation,
           },
         })
         .then(() => {
@@ -413,7 +364,7 @@ export default {
 
     goToEntity(entity_idx) {
       this.$router.push({
-        name: 'label',
+        name: 'label-cls',
         params: {
           task_id: this.task_id.toString(),
           entity_idx: entity_idx.toString(),
@@ -426,8 +377,6 @@ export default {
       this.label = -1 // chosen label index
       this.showLabels = false // whether the label chooser is shown
       this.inLabelChooser = false // whether the cursor is in label chooser
-      this.chosenBox = null
-      this.canvasDrawing = false
     },
   },
   beforeRouteEnter(to, from, next) {
@@ -440,6 +389,7 @@ export default {
         fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
       })
     } else {
+      this.reset()
       fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
     }
   },
@@ -447,38 +397,10 @@ export default {
 </script>
 
 <style scoped>
-#canvas {
-  overflow: hidden;
-  position: relative;
-}
 #label-chooser {
   position: absolute;
   top: 50px;
   left: 5px;
   z-index: 1;
-}
-.vl {
-  position: absolute;
-  border-left-width: 1px;
-  border-left-color: red;
-  height: 100%;
-  z-index: 100;
-}
-.hl {
-  position: absolute;
-  border-top-width: 1px;
-  border-top-color: red;
-  width: 100%;
-  z-index: 100;
-}
-.new-box {
-  position: absolute;
-  border-color: yellowgreen;
-  border-width: 2px;
-}
-.box {
-  position: absolute;
-  border-color: yellowgreen;
-  border-width: 2px;
 }
 </style>

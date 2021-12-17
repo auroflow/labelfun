@@ -22,7 +22,7 @@
     >
       <v-btn class="mr-2" @click="showAddEntities"> 添加{{ ENTITY }} </v-btn>
       <v-btn class="mr-2" @click="showModify">修改任务</v-btn>
-      <v-btn class="mr-2" @click="publish">发布任务</v-btn>
+      <v-btn class="mr-2 green" dark @click="publish">发布任务</v-btn>
       <v-btn class="mr-2 warning" @click="deleteTask">删除任务</v-btn>
     </template>
 
@@ -34,9 +34,15 @@
       <v-btn
         class="mr-2"
         v-if="task.labeler.id === user.id"
-        :to="{ name: 'label', params: { task_id: task.id, entity_idx: 0 } }"
+        :to="{
+          name: label[task.type],
+          params: { task_id: task.id, entity_idx: 0 },
+        }"
       >
         去标注
+      </v-btn>
+      <v-btn class="mr-2" v-if="task.label_done" @click="completeTask('label')">
+        提交标注结果
       </v-btn>
     </template>
 
@@ -45,7 +51,23 @@
     </template>
 
     <template v-if="task.progress === 'reviewing'">
-      <v-btn class="mr-2" v-if="task.reviewer.id === user.id"> 去审核 </v-btn>
+      <v-btn
+        class="mr-2"
+        v-if="task.reviewer.id === user.id"
+        :to="{
+          name: 'review',
+          params: { task_id: task.id, entity_idx: 0 },
+        }"
+      >
+        去审核
+      </v-btn>
+      <v-btn
+        class="mr-2"
+        v-if="task.review_done"
+        @click="completeTask('review')"
+      >
+        提交审核结果
+      </v-btn>
     </template>
 
     <template v-if="task.progress === 'done'">
@@ -70,7 +92,11 @@
               "
             >
               <v-fade-transition>
-                <v-overlay v-if="hover" absolute color="#036358">
+                <v-overlay
+                  v-if="task.published ? false : hover"
+                  absolute
+                  color="#036358"
+                >
                   <v-icon color="warning" @click="deleteEntity(entity.id)"
                     >mdi-close-circle</v-icon
                   >
@@ -118,7 +144,7 @@
     </v-dialog>
 
     <v-dialog v-model="modifying" persistent max-width="400px">
-      <v-form>
+      <v-form ref="modifyForm">
         <v-card>
           <v-card-title>修改任务信息</v-card-title>
           <v-card-text>
@@ -131,6 +157,7 @@
               :append-icon="null"
               required
               chips
+              :rules="labelRules"
               deletable-chips
             >
               <template v-slot:no-data>
@@ -180,6 +207,11 @@ export default {
         image_seg: '图像物体探测',
         video_seg: '视频物体探测',
       },
+      label: {
+        image_cls: 'label-cls',
+        image_seg: 'label-img',
+        video_seg: 'label-vid',
+      },
       taskProgresses: {
         unpublished: '尚未发布',
         unlabeled: '未标注',
@@ -192,6 +224,10 @@ export default {
       modifying: false,
       newName: null,
       newLabels: [],
+      labelRules: [
+        (v) => !!v.length || '请填写标签。',
+        (v) => v.every((item) => !!item.length) || '标签文字不能为空。',
+      ],
     }
   },
   computed: {
@@ -217,24 +253,38 @@ export default {
   },
   methods: {
     claimTask(action) {
-      this.$store
-        .dispatch('task/claim', {
-          id: this.task.id,
-          action: action,
-        })
-        .then(() => {
-          this.$store.dispatch('message/pushSuccess', '任务领取成功。')
-        })
+      if (window.confirm(`确定领取此任务吗？`)) {
+        this.$store
+          .dispatch('task/claim', {
+            id: this.task.id,
+            action: action,
+          })
+          .then(() => {
+            this.$store.dispatch('message/pushSuccess', '任务领取成功。')
+          })
+      }
     },
     completeTask(action) {
-      this.$store
-        .dispatch('task/complete', {
-          id: this.task.id,
-          action: action,
-        })
-        .then(() => {
-          this.$store.dispatch('message/pushSuccess', '任务完成成功。')
-        })
+      const message =
+        action === 'label'
+          ? `确定提交标注结果吗？提交后，任务将会开放审核。`
+          : `确定提交审核结果吗？`
+      if (window.confirm(message)) {
+        this.$store
+          .dispatch('task/complete', {
+            id: this.task.id,
+            action: action,
+          })
+          .then(() => {
+            let success = null
+            if (this.task.status === 'unlabeled')
+              success = '提交成功，等待标注者修改。'
+            else if (this.task.status === 'unreviewed')
+              success = '提交成功，请等待审核结果。'
+            else success = '提交成功！该任务已完成。'
+            this.$store.dispatch('message/pushSuccess', success)
+          })
+      }
     },
     upload() {
       if (!this.files.length) {
@@ -299,23 +349,25 @@ export default {
       this.modifying = true
     },
     modifyTask() {
-      NProgress.start()
-      const data = {
-        labels: this.newLabels,
-        name: this.newName,
+      if (this.$refs.modifyForm.validate()) {
+        NProgress.start()
+        const data = {
+          labels: this.newLabels,
+          name: this.newName,
+        }
+        this.$store
+          .dispatch('task/updateTask', {
+            id: this.task.id,
+            task: data,
+          })
+          .then(() => {
+            this.$store.dispatch('message/pushSuccess', '任务修改成功。')
+            this.modifying = false
+          })
+          .finally(() => {
+            NProgress.done()
+          })
       }
-      this.$store
-        .dispatch('task/updateTask', {
-          id: this.task.id,
-          task: data,
-        })
-        .then(() => {
-          this.$store.dispatch('message/pushSuccess', '任务修改成功。')
-          this.modifying = false
-        })
-        .finally(() => {
-          NProgress.done()
-        })
     },
   },
 }

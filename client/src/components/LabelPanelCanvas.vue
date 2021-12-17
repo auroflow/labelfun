@@ -18,30 +18,30 @@
       id="image"
       alt="image"
       draggable="true"
-      :src="baseURL + image.key"
+      :src="url ? url : baseURL + image.key"
       :style="imgStyle"
-      @load="adjustImage"
+      @load="onImageLoad"
     />
 
     <div class="vl" :style="vlStyle"></div>
     <div class="hl" :style="hlStyle"></div>
     <div class="new-box" :style="newBoxStyle"></div>
     <label-panel-box
-      v-for="(box, index) in boxes"
+      v-for="(bbox, index) in bboxes"
       :key="index"
       :height="imgHeight"
       :width="imgHeight * imgRatio"
       :left="imgLeft"
       :top="imgTop"
-      :box="box"
-      :selected="box === chosenBox"
-      @click="chooseBox(box)"
+      :box="bbox"
+      :selected="bbox === chosenBox"
+      @clicked="chooseBox(index)"
       @start-resizing="resizing = $event"
       @end-resizing="resizing = ''"
     ></label-panel-box>
 
     <p
-      style="position: absolute; right: 0px"
+      style="position: absolute; right: 0"
       class="white--text grey darken-2 px-2"
       v-show="canvasDrawing"
     >
@@ -65,7 +65,12 @@ export default {
     },
     boxes: {
       type: Array,
-      required: true,
+    },
+    objects: {
+      type: Array,
+    },
+    currentFrame: {
+      type: Number,
     },
     inLabelChooser: {
       type: Boolean,
@@ -78,6 +83,13 @@ export default {
     chosenBox: {
       type: Object,
       required: true,
+    },
+    url: {
+      type: String,
+    },
+    isVideo: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -106,6 +118,18 @@ export default {
 
   computed: {
     ...mapState(['baseURL']),
+    bboxes() {
+      if (this.boxes) {
+        return this.boxes.map((box) => box.bbox)
+      } else if (this.objects) {
+        return this.objects.map(
+          (object) =>
+            object.trajectory.find(
+              (snapshot) => snapshot.frame_number === this.currentFrame
+            )?.bbox
+        )
+      } else return []
+    },
     relativeX() {
       return (this.cursorX - this.imgLeft) / (this.imgHeight * this.imgRatio)
     },
@@ -163,6 +187,7 @@ export default {
     adjustImage() {
       let canvasWidth = document.getElementById('canvas').offsetWidth
       let canvasHeight = document.getElementById('canvas').offsetHeight
+      if (this.isVideo) canvasHeight -= 40
       let canvasRatio = canvasWidth / canvasHeight
       this.imgRatio =
         this.$refs.image.naturalWidth / this.$refs.image.naturalHeight
@@ -202,56 +227,56 @@ export default {
         const cursorDY = (this.cursorY - this.initialCursorY) / this.imgHeight
 
         if (this.resizing === 'upper-left') {
-          const nx = this.chosenBox.bbox[0] + cursorDX
-          const ny = this.chosenBox.bbox[1] + cursorDY
-          const nw = this.chosenBox.bbox[2] - cursorDX
-          const nh = this.chosenBox.bbox[3] - cursorDY
+          const nx = this.chosenBox[0] + cursorDX
+          const ny = this.chosenBox[1] + cursorDY
+          const nw = this.chosenBox[2] - cursorDX
+          const nh = this.chosenBox[3] - cursorDY
           console.log('resizing upper left:', nx, ny, nw, nh)
           if (nx >= 0 && ny >= 0 && nw >= 0 && nh >= 0) {
             this.$emit('resize-box', {
-              index: this.boxes.indexOf(this.chosenBox),
+              index: this.bboxes.indexOf(this.chosenBox),
               bbox: [nx, ny, nw, nh],
             })
           } else {
             this.resizing = ''
           }
         } else if (this.resizing === 'upper-right') {
-          const nx = this.chosenBox.bbox[0]
-          const ny = this.chosenBox.bbox[1] + cursorDY
-          const nw = this.chosenBox.bbox[2] + cursorDX
-          const nh = this.chosenBox.bbox[3] - cursorDY
+          const nx = this.chosenBox[0]
+          const ny = this.chosenBox[1] + cursorDY
+          const nw = this.chosenBox[2] + cursorDX
+          const nh = this.chosenBox[3] - cursorDY
           console.log('resizing upper left:', nx, ny, nw, nh)
           if (ny >= 0 && nh >= 0 && nw >= 0 && nx + nw <= 1) {
             this.$emit('resize-box', {
-              index: this.boxes.indexOf(this.chosenBox),
+              index: this.bboxes.indexOf(this.chosenBox),
               bbox: [nx, ny, nw, nh],
             })
           } else {
             this.resizing = ''
           }
         } else if (this.resizing === 'bottom-left') {
-          const nx = this.chosenBox.bbox[0] + cursorDX
-          const ny = this.chosenBox.bbox[1]
-          const nw = this.chosenBox.bbox[2] - cursorDX
-          const nh = this.chosenBox.bbox[3] + cursorDY
+          const nx = this.chosenBox[0] + cursorDX
+          const ny = this.chosenBox[1]
+          const nw = this.chosenBox[2] - cursorDX
+          const nh = this.chosenBox[3] + cursorDY
           console.log('resizing upper left:', nx, ny, nw, nh)
           if (nx >= 0 && nw >= 0 && nh >= 0 && ny + nh <= 1) {
             this.$emit('resize-box', {
-              index: this.boxes.indexOf(this.chosenBox),
+              index: this.bboxes.indexOf(this.chosenBox),
               bbox: [nx, ny, nw, nh],
             })
           } else {
             this.resizing = ''
           }
         } else if (this.resizing === 'bottom-right') {
-          const nx = this.chosenBox.bbox[0]
-          const ny = this.chosenBox.bbox[1]
-          const nw = this.chosenBox.bbox[2] + cursorDX
-          const nh = this.chosenBox.bbox[3] + cursorDY
+          const nx = this.chosenBox[0]
+          const ny = this.chosenBox[1]
+          const nw = this.chosenBox[2] + cursorDX
+          const nh = this.chosenBox[3] + cursorDY
           console.log('resizing upper left:', nx, ny, nw, nh)
           if (nh >= 0 && ny + nh <= 1 && nw >= 0 && nx + nw <= 1) {
             this.$emit('resize-box', {
-              index: this.boxes.indexOf(this.chosenBox),
+              index: this.bboxes.indexOf(this.chosenBox),
               bbox: [nx, ny, nw, nh],
             })
           } else {
@@ -306,8 +331,13 @@ export default {
       }
     },
 
-    chooseBox(box) {
-      this.$emit('choose-box', box)
+    chooseBox(index) {
+      console.log('emitting choose box', index)
+      this.$emit('choose-box', index)
+    },
+
+    onImageLoad() {
+      this.adjustImage()
     },
   },
 
@@ -337,11 +367,6 @@ export default {
 .new-box {
   position: absolute;
   border-color: yellow;
-  border-width: 2px;
-}
-.box {
-  position: absolute;
-  border-color: yellowgreen;
   border-width: 2px;
 }
 </style>

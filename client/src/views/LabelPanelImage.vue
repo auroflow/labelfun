@@ -30,7 +30,7 @@
         <span>返回</span>
       </v-tooltip>
 
-      <!-- Add object -->
+      <!-- Add box -->
       <v-tooltip right color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
@@ -44,10 +44,10 @@
             :disabled="canvasDrawing"
             @click="toggleLabelChooser"
           >
-            <v-icon dark size="30"> mdi-tag-plus </v-icon>
+            <v-icon dark size="30"> mdi-vector-square-plus </v-icon>
           </v-btn>
         </template>
-        <span>添加物体</span>
+        <span>添加选框</span>
       </v-tooltip>
 
       <template v-slot:append>
@@ -185,236 +185,90 @@
       @mousemove.prevent
     >
       <v-list-item>
-        <v-list-item-title class="text-center">物体信息</v-list-item-title>
+        <v-list-item-title class="text-center">选框信息</v-list-item-title>
       </v-list-item>
       <transition-group name="v-expand-transition">
         <div
-          v-for="(object, index) in entity.annotation"
+          v-for="(box, index) in entity.annotation"
           :key="index"
           class="mx-4"
         >
           <v-alert
             border="left"
-            :color="object === chosenObject ? 'green darken-2' : 'green'"
+            :color="box === chosenBox ? 'green darken-2' : 'green'"
             class="label-selector"
             dark
             dense
             transition="v-expand-transition"
-            @click="chooseBox(index)"
+            @click="chooseBox(box)"
             v-click-outside="{
               handler: unchooseBox,
               include: getIncludedElements,
             }"
           >
             <v-chip
-              :color="object === chosenObject ? 'green' : 'green lighten-2'"
+              :color="box === chosenBox ? 'green' : 'green lighten-2'"
               class="mr-2"
-              >{{ object.label }}</v-chip
+              >{{ box.label }}</v-chip
             >
             <template v-slot:append>
-              <template v-if="!boxInThisFrame(object)">
-                <v-tooltip bottom color="grey darken-3">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn
-                      icon
-                      @click="startDrawing(object)"
-                      v-bind="attrs"
-                      v-on="on"
-                      :disabled="canvasDrawing"
-                    >
-                      <v-icon class="mr-1">mdi-plus-circle-outline</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>在此帧上标注该物体</span>
-                </v-tooltip>
-              </template>
-              <template v-else>
-                <v-tooltip bottom color="grey darken-3">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn
-                      icon
-                      @click="deleteBox(object)"
-                      v-bind="attrs"
-                      v-on="on"
-                      :disabled="canvasDrawing"
-                    >
-                      <v-icon>mdi-close-circle</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>删除该帧上的标注</span>
-                </v-tooltip>
-              </template>
-              <template v-if="object.trajectory.length === 0">
-                <v-tooltip bottom color="grey darken-3">
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-btn
-                      icon
-                      @click="deleteObject(object)"
-                      v-bind="attrs"
-                      v-on="on"
-                      :disabled="canvasDrawing"
-                    >
-                      <v-icon>mdi-close-box</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>删除该物体</span>
-                </v-tooltip>
-              </template>
+              <v-icon @click="deleteBox(box)">mdi-close-circle</v-icon>
             </template>
           </v-alert>
         </div>
       </transition-group>
     </v-navigation-drawer>
 
-    <v-footer
-      app
-      color="grey darken-3"
-      class="d-flex justify-center playback-controller"
-      dark
-      padless
-      inset
-    >
-      <v-tooltip top color="grey darken-3">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            tile
-            icon
-            width="40"
-            height="40"
-            v-bind="attrs"
-            v-on="on"
-            :disabled="canvasDrawing || current_frame === 1"
-            @click="current_frame = 1"
-          >
-            <v-icon size="40"> mdi-skip-backward </v-icon>
-          </v-btn>
-        </template>
-        <span>第一帧</span>
-      </v-tooltip>
-
-      <v-tooltip top color="grey darken-3">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            tile
-            icon
-            width="40"
-            height="40"
-            v-bind="attrs"
-            v-on="on"
-            :disabled="current_frame === 1"
-            @click="current_frame--"
-          >
-            <v-icon size="40px"> mdi-skip-previous </v-icon>
-          </v-btn>
-        </template>
-        <span>上一帧</span>
-      </v-tooltip>
-      <v-tooltip top color="grey darken-3">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            tile
-            icon
-            width="40"
-            height="40"
-            v-bind="attrs"
-            v-on="on"
-            :disabled="canvasDrawing"
-            @click="playOrStop"
-          >
-            <v-icon size="40px">
-              {{ playing ? 'mdi-stop' : 'mdi-play' }}
-            </v-icon>
-          </v-btn>
-        </template>
-        <span>{{ current_frame }} / {{ entity.frame_count }}</span>
-      </v-tooltip>
-      <v-tooltip top color="grey darken-3">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            tile
-            icon
-            width="40"
-            height="40"
-            v-bind="attrs"
-            v-on="on"
-            :disabled="canvasDrawing || current_frame === entity.frame_count"
-            @click="current_frame++"
-          >
-            <v-icon size="40px"> mdi-skip-next </v-icon>
-          </v-btn>
-        </template>
-        <span>下一帧</span>
-      </v-tooltip>
-      <v-tooltip top color="grey darken-3">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            tile
-            icon
-            width="40"
-            height="40"
-            v-bind="attrs"
-            v-on="on"
-            :disabled="canvasDrawing || current_frame === entity.frame_count"
-            @click="current_frame = entity.frame_count"
-          >
-            <v-icon size="40px"> mdi-skip-forward </v-icon>
-          </v-btn>
-        </template>
-        <span>最后一帧</span>
-      </v-tooltip>
-    </v-footer>
-
     <v-main>
-      <v-sheet
-        style="z-index: 100"
-        v-show="showLabels"
-        elevation="10"
-        rounded="xl"
-        width="300"
-        id="label-chooser"
-        @mouseover="inLabelChooser = true"
-        @mouseout="inLabelChooser = false"
-      >
-        <v-sheet class="pa-2 grey darken-3" dark rounded="t-xl">
-          <v-container>
-            <v-row>
-              <p class="text-body-1 my-auto mx-2">选择标签</p>
-              <v-spacer></v-spacer>
-              <v-btn icon @click="closeAndClearLabelChooser">
-                <v-icon>mdi-close</v-icon>
-              </v-btn>
-              <v-btn
-                class="ml-2"
-                icon
-                @click="addObject"
-                :disabled="canvasDrawing || label === -1"
-              >
-                <v-icon>mdi-check</v-icon>
-              </v-btn>
-            </v-row>
-          </v-container>
-        </v-sheet>
+      <v-dialog-transition>
+        <v-sheet
+          style="z-index: 100"
+          v-show="showLabels"
+          elevation="10"
+          rounded="xl"
+          width="300"
+          id="label-chooser"
+          @mouseover="inLabelChooser = true"
+          @mouseout="inLabelChooser = false"
+        >
+          <v-sheet class="pa-2 grey darken-3" dark rounded="t-xl">
+            <v-container>
+              <v-row>
+                <p class="text-body-1 my-auto mx-2">选择标签</p>
+                <v-spacer></v-spacer>
+                <v-btn icon @click="closeAndClearLabelChooser">
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
+                <v-btn
+                  class="ml-2"
+                  icon
+                  @click="startDrawing"
+                  :disabled="canvasDrawing || label === -1"
+                >
+                  <v-icon>mdi-check</v-icon>
+                </v-btn>
+              </v-row>
+            </v-container>
+          </v-sheet>
 
-        <v-sheet class="pa-4" rounded="b-xl">
-          <v-chip-group active-class="grey" v-model="label" column>
-            <v-chip v-for="tag in task.labels" class="" :key="tag">
-              {{ tag }}
-            </v-chip>
-          </v-chip-group>
+          <v-sheet class="pa-4" rounded="b-xl">
+            <v-chip-group active-class="grey" v-model="label" column>
+              <v-chip v-for="tag in task.labels" class="" :key="tag">
+                {{ tag }}
+              </v-chip>
+            </v-chip-group>
+          </v-sheet>
         </v-sheet>
-      </v-sheet>
+      </v-dialog-transition>
 
       <label-panel-canvas
         :in-label-chooser="inLabelChooser"
         :image="entity"
-        :url="imgURL"
-        :objects="entity.annotation"
-        :current-frame="current_frame"
+        :boxes="entity.annotation"
         :canvas-drawing="canvasDrawing"
         :chosen-box="getChosenBox"
-        :is-video="true"
         @new-box-drawn="addNewBox"
-        @choose-box="chooseBox($event)"
+        @choose-box="chooseBox"
         @resize-box="resizeBox"
       ></label-panel-canvas>
     </v-main>
@@ -468,14 +322,11 @@ export default {
   },
 
   data: () => ({
-    playing: false,
-    intervalHandler: null,
-    current_frame: 1,
     dirty: false,
     label: -1, // chosen label index
     showLabels: false, // whether the label chooser is shown
     inLabelChooser: false, // whether the cursor is in label chooser
-    chosenObject: null,
+    chosenBox: null,
     canvasDrawing: false,
   }),
   computed: {
@@ -485,35 +336,21 @@ export default {
       user: (state) => state.user.user,
       entity: (state) => state.entity.entity,
     }),
-    imgURL() {
-      return (
-        this.baseURL +
-        this.entity.key +
-        '-' +
-        this.current_frame.toString().padStart(6, '0')
-      )
-    },
     getChosenBox() {
-      return this.chosenObject?.trajectory.find(
-        (snapshot) => snapshot.frame_number === this.current_frame
-      )?.bbox
+      return this.chosenBox?.bbox
     },
   },
   methods: {
     chooseBox(index) {
-      console.log('choosing', this.entity.annotation[index])
-      this.chosenObject = this.entity.annotation[index]
+      this.chosenBox = this.entity.annotation[index]
     },
 
     unchooseBox() {
-      if (!this.canvasDrawing) this.chosenObject = null
+      if (!this.canvasDrawing) this.chosenBox = null
     },
 
     getIncludedElements() {
-      return [
-        ...document.getElementsByClassName('label-selector'),
-        ...document.getElementsByClassName('playback-controller'),
-      ]
+      return [...document.getElementsByClassName('label-selector')]
     },
 
     closeAndClearLabelChooser() {
@@ -531,59 +368,33 @@ export default {
       }
     },
 
-    addObject() {
-      this.$store.dispatch('entity/addObject', this.task.labels[this.label])
-      this.showLabels = false
-      this.label = -1
-    },
-
-    boxInThisFrame(object) {
-      return object.trajectory.find(
-        (snapshot) => snapshot.frame_number === this.current_frame
-      )
-    },
-
     startDrawing() {
       this.canvasDrawing = true
+      this.showLabels = false
     },
 
     addNewBox(bbox) {
       this.dirty = true
       this.canvasDrawing = false
-
+      const labelChosen = this.label
+      this.label = -1
       if (bbox) {
-        const payload = {
-          object: this.chosenObject,
-          snapshot: {
-            frame_number: this.current_frame,
-            bbox: bbox,
-          },
+        const box = {
+          label: this.task.labels[labelChosen],
+          bbox: bbox,
         }
-        console.log(payload)
-        this.$store.dispatch('entity/addBoxToObject', payload)
+        this.$store.dispatch('entity/addBox', box)
       }
     },
 
     resizeBox(e) {
       this.dirty = true
-      this.$store.dispatch('entity/resizeBoxInObject', {
-        ...e,
-        frame_number: this.current_frame,
-      })
+      this.$store.dispatch('entity/resizeBox', e)
     },
 
-    deleteBox(object) {
+    deleteBox(box) {
       this.dirty = true
-      const payload = {
-        object: object,
-        frame_number: this.current_frame,
-      }
-      this.$store.dispatch('entity/deleteBoxInFrame', payload)
-    },
-
-    deleteObject(object) {
-      this.dirty = true
-      this.$store.dispatch('entity/deleteObject', object)
+      this.$store.dispatch('entity/deleteBox', box)
     },
 
     saveChanges() {
@@ -591,7 +402,7 @@ export default {
         .dispatch('entity/labelEntity', {
           id: this.entity.id,
           data: {
-            objects: this.entity.annotation,
+            boxes: this.entity.annotation,
           },
         })
         .then(() => {
@@ -604,7 +415,7 @@ export default {
 
     goToEntity(entity_idx) {
       this.$router.push({
-        name: 'label-vid',
+        name: 'label-img',
         params: {
           task_id: this.task_id.toString(),
           entity_idx: entity_idx.toString(),
@@ -617,32 +428,8 @@ export default {
       this.label = -1 // chosen label index
       this.showLabels = false // whether the label chooser is shown
       this.inLabelChooser = false // whether the cursor is in label chooser
-      this.chosenObject = null
+      this.chosenBox = null
       this.canvasDrawing = false
-      this.current_frame = 1
-      this.playing = false
-    },
-
-    play() {
-      this.playing = true
-      this.intervalHandler = setInterval(() => {
-        if (this.current_frame === this.entity.frame_count) {
-          this.playing = false
-          clearInterval(this.intervalHandler)
-        } else {
-          this.current_frame++
-        }
-      }, 100)
-    },
-
-    stop() {
-      this.playing = false
-      clearInterval(this.intervalHandler)
-    },
-
-    playOrStop() {
-      if (this.playing) this.stop()
-      else this.play()
     },
   },
   beforeRouteEnter(to, from, next) {

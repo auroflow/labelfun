@@ -1,15 +1,17 @@
 <template>
   <v-app>
-    <template v-if="$route.name !== 'label'">
+    <template
+      v-if="$route.name.startsWith('label') || $route.name === 'review'"
+    >
+      <router-view></router-view>
+    </template>
+    <template v-else>
       <nav-bar :name="name"></nav-bar>
       <v-main>
         <message-bar></message-bar>
         <router-view></router-view>
       </v-main>
       <the-footer :name="name"></the-footer>
-    </template>
-    <template v-else>
-      <router-view></router-view>
     </template>
   </v-app>
 </template>

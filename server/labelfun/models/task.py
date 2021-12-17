@@ -1,8 +1,5 @@
 from datetime import datetime
 
-from sqlalchemy import event
-from sqlalchemy.util import symbol
-
 from labelfun.extensions import db
 from labelfun.models import TaskType, JobStatus
 
@@ -27,7 +24,6 @@ class Task(db.Model):
                               back_populates='labeled_tasks')
     reviewer = db.relationship('User', foreign_keys=[reviewer_id],
                                back_populates='reviewed_tasks')
-
     entities = db.relationship('Entity', back_populates='task',
                                cascade='all, delete')
     labeled_count: int = db.Column(db.Integer, default=0)
@@ -55,26 +51,9 @@ class Entity(db.Model):
     uploaded: bool = db.Column(db.Boolean, default=False)
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
     task = db.relationship('Task', back_populates='entities')
-
+    review: bool = db.Column(db.Boolean, default=False)
     # For video tasks
     frame_count = db.Column(db.Integer)
-
-
-@event.listens_for(Entity.status, 'set')
-def update_task_status(target, value, oldvalue, initiator):
-    task = target.task
-    if oldvalue == value:
-        pass
-    elif oldvalue == JobStatus.UNLABELED and value == JobStatus.UNREVIEWED:
-        task.labeled_count += 1
-    elif oldvalue == JobStatus.UNREVIEWED and value == JobStatus.DONE:
-        task.reviewed_count += 1
-    elif oldvalue == JobStatus.UNREVIEWED and value == JobStatus.UNLABELED:
-        task.labeled_count -= 1
-    elif oldvalue != symbol('NO_VALUE'):
-        raise ValueError(
-            'Entity status cannot switch from ' + str(oldvalue) + ' to ' + str(
-                value))
 
 # class Frame(db.Model):
 #     __tablename__ = 'frame'

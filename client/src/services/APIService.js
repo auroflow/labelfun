@@ -26,11 +26,6 @@ apiClient.interceptors.response.use(
   }
 )
 
-// eslint-disable-next-line no-unused-vars
-const uploadClient = axios.create({
-  baseURL: 'http://localhost:8080/upload',
-})
-
 export default {
   setAuth(token) {
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -85,6 +80,9 @@ export default {
   },
   entityLabel(id, data) {
     return apiClient.post(`/entities/${id}`, data)
+  },
+  entityReview(id, data) {
+    return apiClient.put(`/entities/${id}`, data)
   },
   entityDelete(id) {
     return apiClient.delete(`/entities/${id}`)

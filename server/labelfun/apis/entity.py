@@ -145,10 +145,13 @@ class EntityView(MethodView):
         print('annotation:', annotation)
         if not annotation or annotation == '[]':
             entity.annotation = None
+            if entity.status == JobStatus.UNREVIEWED:
+                task.labeled_count -= 1
             entity.status = JobStatus.UNLABELED
         else:
-            schema = LabelInSchema()
             entity.annotation = annotation
+            if entity.status == JobStatus.UNLABELED:
+                task.labeled_count += 1
             entity.status = JobStatus.UNREVIEWED
 
         db.session.commit()
@@ -164,17 +167,19 @@ class EntityView(MethodView):
         task = entity.task
         if user.type != UserType.ADMIN and user != task.reviewer:
             abort(403)
-        if entity.status != JobStatus.UNREVIEWED:
+        if entity.status not in [JobStatus.UNREVIEWED, JobStatus.REVIEWED]:
             abort(400, 'ENTITY_IS_NOT_UNREVIEWED')
         if task.status != JobStatus.UNREVIEWED:
             abort(400, 'TASK_STATUS_IS_NOT_UNREVIEWED')
 
         review = data['review']
         if review == 'correct':
-            entity.status = JobStatus.DONE
+            entity.review = True
         else:  # 'incorrect'
-            entity.status = JobStatus.UNLABELED
-            entity.annotation = None
+            entity.review = False
+        if entity.status == JobStatus.UNREVIEWED:
+            task.reviewed_count += 1
+        entity.status = JobStatus.REVIEWED
         db.session.commit()
         return entity
 
