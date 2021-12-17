@@ -72,8 +72,12 @@ export default {
   entitiesCreate(data) {
     return apiClient.post('/entities', data)
   },
-  entitiesPatch(key, duration) {
-    return apiClient.patch('/entities', { key: key, duration: duration })
+  entitiesPatch(key, duration, metadata) {
+    return apiClient.patch('/entities', {
+      key: key,
+      duration: duration,
+      metadata: metadata,
+    })
   },
   entityFetch(id) {
     return apiClient.get(`/entities/${id}`)
@@ -86,5 +90,11 @@ export default {
   },
   entityDelete(id) {
     return apiClient.delete(`/entities/${id}`)
+  },
+  exportTask(id, data) {
+    return apiClient.get(`/tasks/export/${id}`, {
+      params: data,
+      responseType: 'blob',
+    })
   },
 }
