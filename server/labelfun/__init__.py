@@ -2,6 +2,7 @@ import os
 
 import click
 from apiflask import APIFlask
+from flask import current_app
 from flask.cli import load_dotenv
 from qiniu import Auth, BucketManager
 
@@ -60,7 +61,7 @@ def register_commands(app: APIFlask):
         secret_key = os.getenv('QINIU_SECRET_KEY')
         q = Auth(access_key, secret_key)
         bucket = BucketManager(q)
-        bucket_name = 'taijian'
+        bucket_name = current_app.config['QINIU_BUCKET_NAME']
 
         def delete_prefix(prefix):
             marker = None

@@ -52,6 +52,7 @@ class Entity(db.Model):
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
     task = db.relationship('Task', back_populates='entities')
     review: bool = db.Column(db.Boolean, default=False)
+    meta_data: str = db.Column(db.String)
     # For video tasks
     frame_count = db.Column(db.Integer)
 

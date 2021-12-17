@@ -1,3 +1,4 @@
+import json
 import math
 from datetime import datetime
 from pprint import pprint
@@ -30,7 +31,7 @@ class EntitiesView(MethodView):
         secret_key = current_app.config['QINIU_SECRET_KEY']
 
         q = Auth(access_key, secret_key)
-        bucket_name = 'taijian'
+        bucket_name = current_app.config['QINIU_BUCKET_NAME']
         credentials = list()
         task_id = data['task_id']
         paths = data['paths']
@@ -62,7 +63,16 @@ class EntitiesView(MethodView):
             if task.type != TaskType.VIDEO_SEG:
                 ops = 'imageView2/1/w/100/h/100/format/webp/q/75|saveas/' + urlsafe_base64_encode(
                     bucket_name + ':' + thumb_key)
-                body = '{"key":$(key),"duration":null}'
+                body = '{' \
+                       '"key":$(key),' \
+                       '"duration":null,' \
+                       '"metadata":{' \
+                       '"size_bytes":$(fsize),' \
+                       '"mime_type":$(mimeType),' \
+                       '"width":$(imageInfo.width),' \
+                       '"height":$(imageInfo.height),' \
+                       '"num_channels":3' \
+                       '}}'
             else:
                 ops = 'vsample/jpg/interval/' + str(
                     interval) + '/pattern/' + urlsafe_base64_encode(
@@ -70,7 +80,19 @@ class EntitiesView(MethodView):
                 ops += 'vsample/jpg/s/x100/interval/' + str(
                     interval) + '/pattern/' + urlsafe_base64_encode(
                     thumb_key + '-$(count)')
-                body = '{"key":$(key),"duration":$(avinfo.format.duration)}'
+                body = '{' \
+                       '"key":$(key),' \
+                       '"duration":$(avinfo.video.duration),' \
+                       '"metadata":{' \
+                       '"size_bytes":$(fsize),' \
+                       '"mime_type":$(mimeType),' \
+                       '"frame_width":$(avinfo.video.width),' \
+                       '"frame_height":$(avinfo.video.height),' \
+                       '"frame_rate":$(avinfo.video.r_frame_rate),' \
+                       '"total_frame_count":$(avinfo.video.nb_frames),' \
+                       '"duration":$(avinfo.video.duration),' \
+                       '"encoding_str":$(avinfo.video.codec_name)' \
+                       '}}'
 
             policy = {
                 "persistentOps": ops,
@@ -96,12 +118,12 @@ class EntitiesView(MethodView):
     @auth_required()
     def patch(self, data):
         """Confirm that the entity is uploaded."""
-        print(f'Received ({data["key"]}, {data["duration"]})')
         key = data['key']
         entity: Entity = Entity.query.filter_by(key=key).first_or_404()
         if g.current_user != entity.task.creator and g.current_user.type != UserType.ADMIN:
             abort(403)
         entity.uploaded = True
+        entity.meta_data = json.dumps(data['metadata'])
         if 'duration' in data and data['duration']:
             entity.frame_count = max(math.floor(
                 data['duration'] / entity.task.interval) - 1, 1)
@@ -201,7 +223,7 @@ class EntityView(MethodView):
             secret_key = current_app.config['QINIU_SECRET_KEY']
             q = Auth(access_key, secret_key)
             bucket = BucketManager(q)
-            bucket_name = 'taijian'
+            bucket_name = current_app.config['QINIU_BUCKET_NAME']
 
             def delete_prefix(prefix):
                 marker = None

@@ -19,6 +19,9 @@ class BaseConfig:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev key')
     QINIU_ACCESS_KEY = os.getenv('QINIU_ACCESS_KEY', 'access key')
     QINIU_SECRET_KEY = os.getenv('QINIU_SECRET_KEY', 'secret key')
+    QINIU_BUCKET_NAME = 'taijian'
+    QINIU_BUCKET_DOMAIN = 'http://r3ncixdy0.hd-bkt.clouddn.com/'
+    EXPORT_DIRECTORY = 'E:\\Users\\imbiansl\\Desktop\\export\\'
 
 
 class DevelopmentConfig(BaseConfig):

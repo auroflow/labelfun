@@ -17,6 +17,7 @@
       </v-chip>
     </p>
 
+    <!-- Buttons -->
     <template
       v-if="task.progress === 'unpublished' && task.creator.id === user.id"
     >
@@ -71,11 +72,10 @@
     </template>
 
     <template v-if="task.progress === 'done'">
-      <v-btn class="mr-2"> 导出标注结果 </v-btn>
+      <v-btn class="mr-2" @click="exporting = true"> 导出标注结果 </v-btn>
     </template>
 
     <p class="text-h5 mt-5">{{ ENTITY }}概览</p>
-
     <v-row class="mb-5" justify="start" dense>
       <v-col
         v-for="entity in task.entities"
@@ -108,6 +108,7 @@
       </v-col>
     </v-row>
 
+    <!-- Upload entities -->
     <v-dialog v-model="showDialog" persistent max-width="600px">
       <v-card>
         <v-card-title>添加{{ ENTITY }}</v-card-title>
@@ -143,6 +144,7 @@
       </v-card>
     </v-dialog>
 
+    <!-- Edit task -->
     <v-dialog v-model="modifying" persistent max-width="400px">
       <v-form ref="modifyForm">
         <v-card>
@@ -179,6 +181,28 @@
         </v-card>
       </v-form>
     </v-dialog>
+
+    <!-- Export -->
+    <v-dialog v-model="exporting" persistent max-width="400px">
+      <v-form ref="exportForm">
+        <v-card>
+          <v-card-title>导出任务</v-card-title>
+          <v-card-text>
+            <v-select
+              label="导出类型"
+              v-model="exportOptions.export_type"
+              :items="allowed_export_types[task.type]"
+              required
+            ></v-select>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn @click="exporting = false">取消</v-btn>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="exportTask">保存</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -186,6 +210,7 @@
 import store from '@/store'
 import { mapMutations, mapState } from 'vuex'
 import NProgress from 'nprogress'
+import APIService from '@/services/APIService'
 
 function fetchTask(id, next) {
   store.dispatch('task/fetchTask', id).then(() => {
@@ -228,6 +253,42 @@ export default {
         (v) => !!v.length || '请填写标签。',
         (v) => v.every((item) => !!item.length) || '标签文字不能为空。',
       ],
+      exporting: false,
+      allowed_export_types: {
+        image_cls: [
+          {
+            text: 'FiftyOne Image Classification Dataset',
+            value: 'fiftyone',
+          },
+        ],
+        image_seg: [
+          {
+            text: 'CVAT Image Dataset',
+            value: 'cvat',
+          },
+          {
+            text: 'COCO Detection Dataset',
+            value: 'coco',
+          },
+          {
+            text: 'VOC Detection Dataset',
+            value: 'voc',
+          },
+          {
+            text: 'KITTI Detection Dataset',
+            value: 'kitti',
+          },
+        ],
+        video_seg: [
+          {
+            text: 'CVAT Video Dataset',
+            value: 'cvat',
+          },
+        ],
+      },
+      exportOptions: {
+        export_type: null,
+      },
     }
   },
   computed: {
@@ -363,6 +424,31 @@ export default {
           .then(() => {
             this.$store.dispatch('message/pushSuccess', '任务修改成功。')
             this.modifying = false
+          })
+          .finally(() => {
+            NProgress.done()
+          })
+      }
+    },
+    exportTask() {
+      if (this.$refs.exportForm.validate()) {
+        NProgress.start()
+        APIService.exportTask(this.task.id, this.exportOptions)
+          .then(({ data }) => {
+            const url = window.URL.createObjectURL(
+              new Blob([data], { type: 'application/zip' })
+            )
+            const link = document.createElement('a')
+            link.setAttribute(
+              'download',
+              this.task.id + '_' + this.exportOptions.export_type + '.zip'
+            )
+            link.href = url
+            document.body.appendChild(link)
+            link.click()
+          })
+          .catch((err) => {
+            this.$store.dispatch('message/pushError', err)
           })
           .finally(() => {
             NProgress.done()

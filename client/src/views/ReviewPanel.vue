@@ -108,6 +108,7 @@
       ></review-panel-canvas>
 
       <v-card
+        v-if="task.type === 'video_seg'"
         class="rounded-pill playback-controller"
         color="rgb(128,128,128, 0.75)"
       >

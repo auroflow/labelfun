@@ -2,17 +2,18 @@ from datetime import datetime
 
 from apiflask import APIBlueprint, input, output, abort, pagination_builder
 from apiflask.schemas import EmptySchema
-from flask import g, current_app
+from flask import g, current_app, send_file
 from flask.views import MethodView
 from qiniu import BucketManager, Auth
 from sqlalchemy import desc
 
 from labelfun.apis.auth import auth_required
 from labelfun.extensions import db
+from labelfun.fiftyone import export_task
 from labelfun.models import UserType, TaskType, JobStatus
 from labelfun.models.task import Task
 from labelfun.schemas.task import TaskOutSchema, TasksOutSchema, TaskInSchema, \
-    TasksQuerySchema, TaskProcessInSchema, TaskModifyInSchema
+    TasksQuerySchema, TaskProcessInSchema, TaskModifyInSchema, ExportInSchema
 
 task_bp = APIBlueprint('task', __name__)
 
@@ -126,7 +127,7 @@ class TaskView(MethodView):
         secret_key = current_app.config['QINIU_SECRET_KEY']
         q = Auth(access_key, secret_key)
         bucket = BucketManager(q)
-        bucket_name = 'taijian'
+        bucket_name = current_app.config['QINIU_BUCKET_NAME']
         for entity in task.entities:
             if entity.uploaded:
                 def delete_prefix(prefix):
@@ -206,3 +207,21 @@ class TasksView(MethodView):
         db.session.commit()
 
         return task
+
+
+@task_bp.route('/export/<int:task_id>', endpoint='export')
+class ExportView(MethodView):
+    @input(ExportInSchema, 'query')
+    @auth_required()
+    def get(self, task_id, data):
+        print(task_id, data)
+        task = Task.query.get(task_id)
+        if task.status != JobStatus.DONE:
+            abort(400, 'TASK_IS_NOT_DONE')
+        export_dir = export_task(task, data['export_type'])
+        if export_dir is None:
+            abort(400)
+        try:
+            return send_file(export_dir, as_attachment=True)
+        except FileNotFoundError:
+            abort(400)

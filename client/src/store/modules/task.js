@@ -195,7 +195,13 @@ export default {
                 )
               },
               complete: (res) => {
-                APIService.entitiesPatch(res.key, res.duration)
+                APIService.entitiesPatch(
+                  res.key,
+                  res.duration,
+                  res.metadata
+                ).catch((error) =>
+                  dispatch('message/pushError', error, { root: true })
+                )
               },
             })
           }

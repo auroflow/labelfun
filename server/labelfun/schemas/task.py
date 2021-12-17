@@ -155,9 +155,60 @@ class GetTokenOutSchema(Schema):
 
 
 # Confirm the completion of uploading files
+class MetadataSchema(Schema):
+    size_bytes = Integer(required=True)
+    mime_type = String(required=True)
+    # For images
+    width = Integer()
+    height = Integer()
+    num_channels = Integer()
+    # For videos
+    frame_width = Integer()
+    frame_height = Integer()
+    frame_rate = String()
+    total_frame_count = Integer()
+    duration = Float()
+    encoding_str = String()
+
+    @validates_schema
+    def validate(self, data, **kwargs):
+        if data['mime_type'].startswith('image'):
+            if 'width' not in data:
+                raise ValidationError("width required for an image.")
+            if 'height' not in data:
+                raise ValidationError("height required for an image.")
+            if 'num_channels' not in data:
+                raise ValidationError("num_channels required for an image.")
+        elif data['mime_type'].startswith('video'):
+            if 'frame_width' not in data:
+                raise ValidationError("frame_width required for a video.")
+            if 'frame_height' not in data:
+                raise ValidationError("frame_height required for a video.")
+            if 'frame_rate' not in data:
+                raise ValidationError("frame_rate required for a video.")
+            if 'total_frame_count' not in data:
+                raise ValidationError("total_frame_count required for a video.")
+            if 'duration' not in data:
+                raise ValidationError("duration required for a video.")
+            if 'encoding_str' not in data:
+                raise ValidationError("encoding_str required for a video.")
+        else:
+            raise ValidationError(
+                'The value of the mime_type field is not accepted.')
+
+    @post_load
+    def parse(self, data, many, **kwargs):
+        if 'duration' in data:
+            data['duration'] = float(data['duration'])
+        if 'frame_rate' in data:
+            data['frame_rate'] = eval(data['frame_rate'])
+        return data
+
+
 class EntityPatchSchema(Schema):
     key = String(required=True)
     duration = Float(allow_none=True)
+    metadata = Nested(MetadataSchema)
 
 
 # Claim or complete a task
@@ -213,3 +264,8 @@ class LabelInSchema(Schema):
 # Review
 class ReviewInSchema(Schema):
     review = String(required=True, validate=[OneOf(['correct', 'incorrect'])])
+
+
+# Export
+class ExportInSchema(Schema):
+    export_type = String(required=True)
