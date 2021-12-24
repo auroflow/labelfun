@@ -29,7 +29,7 @@
         <span>返回</span>
       </v-tooltip>
 
-      <!-- Add box -->
+      <!-- Add label -->
       <v-tooltip right color="grey darken-3">
         <template v-slot:activator="{ on, attrs }">
           <v-btn
@@ -40,6 +40,7 @@
             height="50"
             v-bind="attrs"
             v-on="on"
+            :disabled="entity.status === 'done'"
             @click="toggleLabelChooser"
           >
             <v-icon dark size="30"> mdi-vector-square-plus </v-icon>
@@ -196,7 +197,11 @@
           >
             <v-chip color="green lighten-2" class="mr-2">{{ label }}</v-chip>
             <template v-slot:append>
-              <v-icon @click="deleteLabel(label)">mdi-close-circle</v-icon>
+              <v-icon
+                @click="deleteLabel(label)"
+                v-if="entity.status !== 'done'"
+                >mdi-close-circle</v-icon
+              >
             </template>
           </v-alert>
         </div>
@@ -249,13 +254,47 @@
           </v-sheet>
         </v-sheet>
       </v-dialog-transition>
-      <label-panel-canvas
-        :in-label-chooser="inLabelChooser"
-        :image="entity"
-        :boxes="null"
-        :canvas-drawing="false"
-        :chosen-box="null"
-      ></label-panel-canvas>
+
+      <v-hover>
+        <template>
+          <label-panel-canvas
+            :in-label-chooser="inLabelChooser"
+            :image="entity"
+            :boxes="null"
+            :canvas-drawing="false"
+            :chosen-box="null"
+          >
+            <v-fade-transition>
+              <v-overlay
+                v-if="entity.status === 'done'"
+                v-model="showOverlay"
+                absolute
+                color="#f0ffff"
+                z-index="1000"
+              >
+                <v-container>
+                  <v-row justify="center">
+                    <v-icon
+                      color="green darken-3"
+                      x-large
+                      @click="showOverlay = false"
+                    >
+                      mdi-check-circle
+                    </v-icon>
+                  </v-row>
+                  <v-row justify="center">
+                    <p
+                      class="text-body-1 font-weight-bold green--text text--darken-3"
+                    >
+                      已完成
+                    </p>
+                  </v-row>
+                </v-container>
+              </v-overlay>
+            </v-fade-transition>
+          </label-panel-canvas>
+        </template>
+      </v-hover>
     </v-main>
   </v-app>
 </template>
@@ -311,6 +350,7 @@ export default {
     label: -1, // chosen label index
     showLabels: false, // whether the label chooser is shown
     inLabelChooser: false, // whether the cursor is in label chooser
+    showOverlay: true,
   }),
   computed: {
     ...mapState({
@@ -357,9 +397,6 @@ export default {
         .then(() => {
           this.$store.dispatch('message/pushSuccess', '已保存修改。')
         })
-        .catch((err) => {
-          this.$store.dispatch('message/pushError', err)
-        })
     },
 
     goToEntity(entity_idx) {
@@ -377,14 +414,24 @@ export default {
       this.label = -1 // chosen label index
       this.showLabels = false // whether the label chooser is shown
       this.inLabelChooser = false // whether the cursor is in label chooser
+      this.showOverlay = true
     },
   },
+
+  mounted() {
+    window.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        this.showOverlay = false
+      }
+    })
+  },
+
   beforeRouteEnter(to, from, next) {
     fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
   },
   beforeRouteUpdate(to, from, next) {
     if (this.dirty) {
-      this.saveChanges().then(() => {
+      this.saveChanges().finally(() => {
         this.reset()
         fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
       })

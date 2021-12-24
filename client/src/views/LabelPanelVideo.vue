@@ -631,9 +631,6 @@ export default {
         .then(() => {
           this.$store.dispatch('message/pushSuccess', '已保存修改。')
         })
-        .catch((err) => {
-          this.$store.dispatch('message/pushError', err)
-        })
     },
 
     goToEntity(entity_idx) {
@@ -700,7 +697,7 @@ export default {
   },
   beforeRouteUpdate(to, from, next) {
     if (this.dirty) {
-      this.saveChanges().then(() => {
+      this.saveChanges().finally(() => {
         this.reset()
         fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
       })

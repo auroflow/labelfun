@@ -106,6 +106,7 @@
           :image="imageURL"
           :bboxes="bboxes"
           :labels="labels"
+          :view-only="viewOnly"
         >
           <v-fade-transition>
             <v-overlay

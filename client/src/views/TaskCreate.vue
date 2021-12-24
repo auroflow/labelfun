@@ -53,7 +53,9 @@
         </v-col>
       </v-row>
       <v-row>
-        <v-btn @click.prevent="submit">创建任务</v-btn>
+        <v-col>
+          <v-btn class="primary" @click.prevent="submit">创建任务</v-btn>
+        </v-col>
       </v-row>
     </v-form>
   </v-container>
