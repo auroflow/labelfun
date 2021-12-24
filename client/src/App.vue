@@ -1,12 +1,17 @@
 <template>
   <v-app>
     <template
-      v-if="$route.name.startsWith('label') || $route.name === 'review'"
+      v-if="$route.name.startsWith('label') || $route.name.endsWith('view')"
     >
       <router-view></router-view>
     </template>
+    <template v-else-if="$route.name === 'profile'">
+      <nav-bar :name="name" :has-drawer="true">></nav-bar>
+      <router-view></router-view>
+      <the-footer :name="name"></the-footer>
+    </template>
     <template v-else>
-      <nav-bar :name="name"></nav-bar>
+      <nav-bar :name="name"> </nav-bar>
       <v-main>
         <message-bar></message-bar>
         <router-view></router-view>
@@ -32,3 +37,9 @@ export default {
   components: { MessageBar, NavBar, TheFooter },
 }
 </script>
+
+<style>
+html {
+  overflow-y: auto !important;
+}
+</style>

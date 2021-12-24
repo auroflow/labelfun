@@ -6,53 +6,49 @@
     <template v-slot:default="{ items }">
       <v-container>
         <v-row>
-          <v-col v-for="task in items" :key="task.id" cols="12" lg="6">
-            <v-card>
+          <v-col
+            v-for="task in items"
+            :key="task.id"
+            cols="12"
+            md="6"
+            lg="4"
+            xl="3"
+          >
+            <v-card elevation="2" rounded>
               <v-card-title>{{ task.name }}</v-card-title>
               <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="4">任务类型</v-col>
-                    <v-col>
-                      {{ taskTypes[task.type] }}
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="4">任务状态</v-col>
-                    <v-col>
-                      {{ taskProgresses[task.progress] }}
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="4">创建人</v-col>
-                    <v-col>
-                      {{ task.creator.name }}
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="4">创建时间</v-col>
-                    <v-col>
-                      {{ formatDate(task.time) }}
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="4">标签</v-col>
-                    <v-col>
+                <v-row>
+                  <v-col cols="3">
+                    <p>任务类型</p>
+                    <p>任务状态</p>
+                    <p>创建人</p>
+                    <p>创建时间</p>
+                    <p>标签</p>
+                  </v-col>
+                  <v-col>
+                    <p>{{ taskTypes[task.type] }}</p>
+                    <p>{{ taskProgresses[task.progress] }}</p>
+                    <p>{{ task.creator.name }}</p>
+                    <p>{{ formatDate(task.time) }}</p>
+                    <p>
                       <v-chip
                         v-for="label in task.labels.slice(0, 5)"
                         :key="label"
-                        class="mr-1"
+                        class="mr-1 mt-1"
                         small
                       >
                         {{ label }}
                       </v-chip>
                       <v-chip v-if="task.labels.length > 5" small>...</v-chip>
-                    </v-col>
-                  </v-row>
-                </v-container>
+                    </p>
+                  </v-col>
+                </v-row>
               </v-card-text>
               <v-card-actions>
-                <v-btn :to="{ name: 'task', params: { id: task.id } }">
+                <v-btn
+                  :to="{ name: 'task', params: { id: task.id } }"
+                  class="primary"
+                >
                   查看详情
                 </v-btn>
               </v-card-actions>

@@ -101,15 +101,48 @@
     </v-footer>
 
     <v-main>
-      <review-panel-canvas
-        :image="imageURL"
-        :bboxes="bboxes"
-        :labels="labels"
-      ></review-panel-canvas>
+      <v-hover>
+        <review-panel-canvas
+          :image="imageURL"
+          :bboxes="bboxes"
+          :labels="labels"
+          :view-only="viewOnly"
+        >
+          <v-fade-transition>
+            <v-overlay
+              v-if="entity.status === 'done' && !viewOnly"
+              v-model="showOverlay"
+              color="#f0ffff"
+              id="overlay"
+              z-index="1000"
+            >
+              <v-container>
+                <v-row justify="center">
+                  <v-icon
+                    color="green darken-3"
+                    x-large
+                    @click="showOverlay = false"
+                  >
+                    mdi-check-circle
+                  </v-icon>
+                </v-row>
+                <v-row justify="center">
+                  <p
+                    class="text-body-1 font-weight-bold green--text text--darken-3"
+                  >
+                    已完成
+                  </p>
+                </v-row>
+              </v-container>
+            </v-overlay>
+          </v-fade-transition>
+        </review-panel-canvas>
+      </v-hover>
 
       <v-card
         v-if="task.type === 'video_seg'"
         class="rounded-pill playback-controller"
+        :style="playbackControllerStyle"
         color="rgb(128,128,128, 0.75)"
       >
         <v-card-actions>
@@ -208,9 +241,19 @@
         </v-card-actions>
       </v-card>
 
-      <v-card color="rgb(128,128,128, 0.75)" class="review-buttons">
+      <v-card
+        color="rgb(128,128,128, 0.75)"
+        class="review-buttons"
+        v-if="!viewOnly"
+      >
         <v-card-actions>
-          <v-btn dark class="red" @click="review('incorrect')">错误</v-btn>
+          <v-btn
+            dark
+            class="red"
+            @click="review('incorrect')"
+            :disabled="entity.status === 'done'"
+            >错误</v-btn
+          >
           <v-spacer></v-spacer>
           <v-icon v-if="entity.status === 'unreviewed'" color="grey" size="30">
             mdi-help-circle
@@ -220,7 +263,13 @@
           </v-icon>
           <v-icon v-else color="red" size="30"> mdi-close-circle </v-icon>
           <v-spacer></v-spacer>
-          <v-btn dark class="green" @click="review('correct')">正确</v-btn>
+          <v-btn
+            dark
+            class="green"
+            @click="review('correct')"
+            :disabled="entity.status === 'done'"
+            >正确</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-main>
@@ -237,8 +286,11 @@ function fetchTaskAndEntity(task_id, entity_idx, next) {
   store
     .dispatch('task/fetchTask', task_id)
     .then(() => {
-      if (store.state.user.user.id !== store.state.task.task.labeler?.id) {
-        return Promise.reject({ message: '无标注权限。' })
+      if (
+        store.state.task.task.status !== 'done' &&
+        store.state.user.user.id !== store.state.task.task.reviewer?.id
+      ) {
+        return Promise.reject({ message: '无审核权限。' })
       } else {
         const entities = store.state.task.task.entities
         if (entity_idx < 0 || entity_idx >= entities.length) {
@@ -268,11 +320,16 @@ export default {
       type: Number,
       required: true,
     },
+    viewOnly: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data: () => ({
     currentFrame: 1,
     playing: false,
+    showOverlay: true,
   }),
 
   computed: {
@@ -314,6 +371,12 @@ export default {
       if (this.task.type === 'image_cls') return this.entity.annotation
       else return this.entity.annotation.map((item) => item.label)
     },
+
+    playbackControllerStyle() {
+      return {
+        bottom: (this.viewOnly ? 50 : 110) + 'px',
+      }
+    },
   },
 
   methods: {
@@ -326,7 +389,13 @@ export default {
           },
         })
         .then(() => {
-          this.$store.dispatch('message/pushSuccess', '已保存。')
+          this.$store.dispatch('message/pushSuccess', '已保存。').then(() =>
+            setTimeout(() => {
+              if (this.entity_idx < this.task.entity_count - 1) {
+                this.goToEntity(this.entity_idx + 1)
+              }
+            }, 500)
+          )
         })
         .catch((err) => {
           this.$store.dispatch('message/pushError', err)
@@ -335,7 +404,7 @@ export default {
 
     goToEntity(entity_idx) {
       this.$router.push({
-        name: 'review',
+        name: this.$route.name,
         params: {
           task_id: this.task_id.toString(),
           entity_idx: entity_idx.toString(),
@@ -346,6 +415,7 @@ export default {
     reset() {
       this.dirty = false
       this.currentFrame = 1
+      this.showOverlay = true
     },
 
     play() {
@@ -383,6 +453,13 @@ export default {
 </script>
 
 <style scoped>
+#overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 40px;
+}
 .review-buttons {
   z-index: 200;
   position: absolute;
@@ -396,7 +473,6 @@ export default {
 .playback-controller {
   z-index: 200;
   position: absolute;
-  bottom: 110px;
   left: 0;
   right: 0;
   margin-left: auto;

@@ -51,7 +51,7 @@
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn @click="submit" color="success">注册</v-btn>
+            <v-btn @click="submit" color="primary">注册</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>

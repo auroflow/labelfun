@@ -25,15 +25,16 @@
                 prepend-icon="mdi-lock"
                 :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                 @click:append="showPassword = !showPassword"
+                @keyup.enter="submit"
                 required
               />
             </v-form>
           </v-card-text>
           <v-divider></v-divider>
           <v-card-actions>
-            <v-btn color="success" :to="{ name: 'signup' }">注册</v-btn>
+            <v-btn color="secondary" :to="{ name: 'signup' }">注册</v-btn>
             <v-spacer></v-spacer>
-            <v-btn color="info" @click="submit">登录</v-btn>
+            <v-btn color="primary" @click="submit">登录</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>

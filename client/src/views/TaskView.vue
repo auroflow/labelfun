@@ -21,19 +21,23 @@
     <template
       v-if="task.progress === 'unpublished' && task.creator.id === user.id"
     >
-      <v-btn class="mr-2" @click="showAddEntities"> 添加{{ ENTITY }} </v-btn>
-      <v-btn class="mr-2" @click="showModify">修改任务</v-btn>
-      <v-btn class="mr-2 green" dark @click="publish">发布任务</v-btn>
-      <v-btn class="mr-2 warning" @click="deleteTask">删除任务</v-btn>
+      <v-btn class="mr-2 primary" @click="showAddEntities">
+        添加{{ ENTITY }}
+      </v-btn>
+      <v-btn class="mr-2 primary" @click="showModify">修改任务</v-btn>
+      <v-btn class="mr-2 secondary" dark @click="publish">发布任务</v-btn>
+      <v-btn class="mr-2 error" @click="deleteTask">删除任务</v-btn>
     </template>
 
     <template v-if="task.progress === 'unlabeled'">
-      <v-btn class="mr-2" @click="claimTask('label')"> 领取标注任务 </v-btn>
+      <v-btn class="mr-2 primary" @click="claimTask('label')">
+        领取标注任务
+      </v-btn>
     </template>
 
     <template v-if="task.progress === 'labeling'">
       <v-btn
-        class="mr-2"
+        class="mr-2 primary"
         v-if="task.labeler.id === user.id"
         :to="{
           name: label[task.type],
@@ -42,18 +46,24 @@
       >
         去标注
       </v-btn>
-      <v-btn class="mr-2" v-if="task.label_done" @click="completeTask('label')">
+      <v-btn
+        class="mr-2 secondary"
+        v-if="task.label_done"
+        @click="completeTask('label')"
+      >
         提交标注结果
       </v-btn>
     </template>
 
     <template v-if="task.progress === 'unreviewed'">
-      <v-btn class="mr-2" @click="claimTask('review')"> 领取审核任务 </v-btn>
+      <v-btn class="mr-2 primary" @click="claimTask('review')">
+        领取审核任务
+      </v-btn>
     </template>
 
     <template v-if="task.progress === 'reviewing'">
       <v-btn
-        class="mr-2"
+        class="mr-2 primary"
         v-if="task.reviewer.id === user.id"
         :to="{
           name: 'review',
@@ -63,7 +73,7 @@
         去审核
       </v-btn>
       <v-btn
-        class="mr-2"
+        class="mr-2 secondary"
         v-if="task.review_done"
         @click="completeTask('review')"
       >
@@ -72,9 +82,19 @@
     </template>
 
     <template v-if="task.progress === 'done'">
-      <v-btn class="mr-2" @click="exporting = true"> 导出标注结果 </v-btn>
+      <v-btn
+        class="mr-2 primary"
+        :to="{
+          name: 'view',
+          params: { task_id: task.id, entity_idx: 0 },
+        }"
+      >
+        查看标注
+      </v-btn>
+      <v-btn class="mr-2 secondary" @click="exporting = true"> 导出标注 </v-btn>
     </template>
 
+    <!-- Entities preview -->
     <p class="text-h5 mt-5">{{ ENTITY }}概览</p>
     <v-row class="mb-5" justify="start" dense>
       <v-col
@@ -90,6 +110,7 @@
                 entity.thumb_key +
                 (task.type === 'video_seg' ? '-000001' : '')
               "
+              lazy-src="/loading.jpg"
             >
               <v-fade-transition>
                 <v-overlay
@@ -109,8 +130,13 @@
     </v-row>
 
     <!-- Upload entities -->
-    <v-dialog v-model="showDialog" persistent max-width="600px">
-      <v-card>
+    <v-dialog
+      v-model="showDialog"
+      persistent
+      max-width="600px"
+      class="rounded-lg"
+    >
+      <v-card rounded class="rounded-lg">
         <v-card-title>添加{{ ENTITY }}</v-card-title>
         <v-card-text>
           <v-file-input
@@ -203,6 +229,17 @@
         </v-card>
       </v-form>
     </v-dialog>
+
+    <v-dialog v-model="exportInProgress" persistent max-width="300px">
+      <v-card>
+        <v-card-title>正在导出……</v-card-title>
+        <v-progress-linear
+          color="primary"
+          indeterminate
+          height="6"
+        ></v-progress-linear>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -254,6 +291,7 @@ export default {
         (v) => v.every((item) => !!item.length) || '标签文字不能为空。',
       ],
       exporting: false,
+      exportInProgress: false,
       allowed_export_types: {
         image_cls: [
           {
@@ -432,7 +470,7 @@ export default {
     },
     exportTask() {
       if (this.$refs.exportForm.validate()) {
-        NProgress.start()
+        this.exportInProgress = true
         APIService.exportTask(this.task.id, this.exportOptions)
           .then(({ data }) => {
             const url = window.URL.createObjectURL(
@@ -451,7 +489,9 @@ export default {
             this.$store.dispatch('message/pushError', err)
           })
           .finally(() => {
-            NProgress.done()
+            this.exportInProgress = false
+            this.exporting = false
+            this.$store.dispatch('message/pushSuccess', '导出成功。')
           })
       }
     },

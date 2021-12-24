@@ -11,7 +11,10 @@
     />
 
     <template v-if="!bboxes">
-      <v-card class="labels-display transparent elevation-0">
+      <v-card
+        class="labels-display transparent elevation-0"
+        :style="labelsDispalyStyle"
+      >
         <v-card-text class="text-center">
           <v-chip
             v-for="(label, index) in labels"
@@ -39,6 +42,7 @@
         :review-mode="true"
       ></label-panel-box>
     </template>
+    <slot></slot>
   </v-sheet>
 </template>
 
@@ -61,6 +65,10 @@ export default {
       type: Array,
       required: true,
     },
+    viewOnly: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data: () => ({
@@ -77,6 +85,12 @@ export default {
         height: this.imgHeight + 'px',
         left: this.imgLeft + 'px',
         top: this.imgTop + 'px',
+      }
+    },
+
+    labelsDispalyStyle() {
+      return {
+        bottom: (this.viewOnly ? 35 : 95) + 'px',
       }
     },
   },
@@ -112,7 +126,7 @@ export default {
 <style scoped>
 .labels-display {
   position: absolute;
-  bottom: 95px;
+
   width: 100%;
 }
 </style>

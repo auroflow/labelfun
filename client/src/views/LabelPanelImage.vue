@@ -1,6 +1,8 @@
 <template>
   <v-app class="grey darken-2">
     <the-message-bar></the-message-bar>
+
+    <!-- Left nav -->
     <v-navigation-drawer
       :value="true"
       app
@@ -41,7 +43,7 @@
             height="50"
             v-bind="attrs"
             v-on="on"
-            :disabled="canvasDrawing"
+            :disabled="canvasDrawing || entity.status === 'done'"
             @click="toggleLabelChooser"
           >
             <v-icon dark size="30"> mdi-vector-square-plus </v-icon>
@@ -175,6 +177,7 @@
       </template>
     </v-navigation-drawer>
 
+    <!-- right nav -->
     <v-navigation-drawer
       :value="true"
       app
@@ -200,7 +203,7 @@
             dark
             dense
             transition="v-expand-transition"
-            @click="chooseBox(box)"
+            @click="chooseBox(index)"
             v-click-outside="{
               handler: unchooseBox,
               include: getIncludedElements,
@@ -212,7 +215,9 @@
               >{{ box.label }}</v-chip
             >
             <template v-slot:append>
-              <v-icon @click="deleteBox(box)">mdi-close-circle</v-icon>
+              <v-icon v-if="entity.status !== 'done'" @click="deleteBox(box)"
+                >mdi-close-circle</v-icon
+              >
             </template>
           </v-alert>
         </div>
@@ -261,16 +266,49 @@
         </v-sheet>
       </v-dialog-transition>
 
-      <label-panel-canvas
-        :in-label-chooser="inLabelChooser"
-        :image="entity"
-        :boxes="entity.annotation"
-        :canvas-drawing="canvasDrawing"
-        :chosen-box="getChosenBox"
-        @new-box-drawn="addNewBox"
-        @choose-box="chooseBox"
-        @resize-box="resizeBox"
-      ></label-panel-canvas>
+      <v-hover>
+        <template>
+          <label-panel-canvas
+            :in-label-chooser="inLabelChooser"
+            :image="entity"
+            :boxes="entity.annotation"
+            :canvas-drawing="canvasDrawing"
+            :chosen-box="getChosenBox"
+            @new-box-drawn="addNewBox"
+            @choose-box="chooseBox"
+            @resize-box="resizeBox"
+          >
+            <v-fade-transition>
+              <v-overlay
+                v-if="entity.status === 'done'"
+                v-model="showOverlay"
+                absolute
+                color="#f0ffff"
+                z-index="1000"
+              >
+                <v-container>
+                  <v-row justify="center">
+                    <v-icon
+                      color="green darken-3"
+                      x-large
+                      @click="showOverlay = false"
+                    >
+                      mdi-check-circle
+                    </v-icon>
+                  </v-row>
+                  <v-row justify="center">
+                    <p
+                      class="text-body-1 font-weight-bold green--text text--darken-3"
+                    >
+                      已完成
+                    </p>
+                  </v-row>
+                </v-container>
+              </v-overlay>
+            </v-fade-transition>
+          </label-panel-canvas>
+        </template>
+      </v-hover>
     </v-main>
   </v-app>
 </template>
@@ -328,6 +366,7 @@ export default {
     inLabelChooser: false, // whether the cursor is in label chooser
     chosenBox: null,
     canvasDrawing: false,
+    showOverlay: true,
   }),
   computed: {
     ...mapState({
@@ -342,7 +381,7 @@ export default {
   },
   methods: {
     chooseBox(index) {
-      this.chosenBox = this.entity.annotation[index]
+      if (!this.canvasDrawing) this.chosenBox = this.entity.annotation[index]
     },
 
     unchooseBox() {
@@ -393,8 +432,10 @@ export default {
     },
 
     deleteBox(box) {
-      this.dirty = true
-      this.$store.dispatch('entity/deleteBox', box)
+      if (box && this.entity.status !== 'done') {
+        this.dirty = true
+        this.$store.dispatch('entity/deleteBox', box)
+      }
     },
 
     saveChanges() {
@@ -407,9 +448,6 @@ export default {
         })
         .then(() => {
           this.$store.dispatch('message/pushSuccess', '已保存修改。')
-        })
-        .catch((err) => {
-          this.$store.dispatch('message/pushError', err)
         })
     },
 
@@ -430,14 +468,24 @@ export default {
       this.inLabelChooser = false // whether the cursor is in label chooser
       this.chosenBox = null
       this.canvasDrawing = false
+      this.showOverlay = true
     },
+  },
+  mounted() {
+    window.addEventListener('keyup', (event) => {
+      if (event.key === 'Delete') {
+        this.deleteBox(this.chosenBox)
+      } else if (event.key === 'Enter') {
+        this.showOverlay = false
+      }
+    })
   },
   beforeRouteEnter(to, from, next) {
     fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
   },
   beforeRouteUpdate(to, from, next) {
     if (this.dirty) {
-      this.saveChanges().then(() => {
+      this.saveChanges().finally(() => {
         this.reset()
         fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
       })
@@ -445,6 +493,11 @@ export default {
       this.reset()
       fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
     }
+  },
+  beforeRouteLeave(to, from, next) {
+    if (this.dirty) {
+      this.saveChanges().then(() => next())
+    } else next()
   },
 }
 </script>

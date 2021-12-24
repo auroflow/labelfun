@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import math
 import os
@@ -12,7 +10,7 @@ from labelfun.models import TaskType
 from labelfun.models.task import Task
 
 
-def export_task(task: Task, export_type: str) -> str | None:
+def export_task(task: Task, export_type: str):
     # save entities to temp
     export_dir = current_app.config['EXPORT_DIRECTORY']
     export_zip = os.path.join(export_dir,
@@ -51,8 +49,8 @@ def export_task(task: Task, export_type: str) -> str | None:
 
     if fo.dataset_exists(task.name):
         dataset = fo.load_dataset(task.name)
-    else:
-        dataset = fo.Dataset(task.name)
+        dataset.delete()
+    dataset = fo.Dataset(task.name)
 
     if task.type == TaskType.IMAGE_CLS:
         for entity in task.entities:
@@ -78,21 +76,39 @@ def export_task(task: Task, export_type: str) -> str | None:
             sample = fo.Sample(os.path.join(temp_dir, entity.path))
             objects = json.loads(entity.annotation)
             for index, obj in enumerate(objects):
-                for snapshot in obj['trajectory']:
-                    real_fc = json.loads(entity.meta_data)['total_frame_count']
-                    real_fn = min((snapshot['frame_number'] - 1) * math.ceil(
-                        real_fc / entity.frame_count) + 1, real_fc)
-                    frame = sample[real_fn]
-                    if frame.has_field('ground_truth'):
-                        frame['ground_truth'].detections.append(
-                            fo.Detection(label=obj['label'],
-                                         bounding_box=snapshot['bbox'])
-                        )
+                def add_ground_truth(frame_number, bbox):
+                    frame = sample[frame_number]
+                    if not frame.has_field('ground_truth'):
+                        frame['ground_truth'] = fo.Detections(
+                            detections=[])
+                    frame['ground_truth'].detections.append(
+                        fo.Detection(label=obj['label'], bounding_box=bbox)
+                    )
+
+                trajectory = obj['trajectory']
+                # real frame count
+                real_fc = json.loads(entity.meta_data)['total_frame_count']
+                # real frame numbers of each snapshot
+                real_fns = [min(math.ceil((snapshot['frame_number'] - 1) *
+                                          real_fc / entity.frame_count) + 1,
+                                real_fc) for snapshot in trajectory]
+                # frame numbers of each snapshot
+                fns = [snapshot['frame_number'] for snapshot in trajectory]
+
+                for j, snapshot in enumerate(trajectory):
+                    # If this and next snapshots are adjacent
+                    if j < len(trajectory) - 1 and fns[j + 1] - fns[j] == 1:
+                        bbox_prev = trajectory[j]['bbox']
+                        bbox_next = trajectory[j + 1]['bbox']
+                        for real_fn in range(real_fns[j], real_fns[j + 1]):
+                            bbox_this = [(real_fn - real_fns[j]) * (n - m) / (
+                                    real_fns[j + 1] - real_fns[j]) + m for
+                                         m, n in zip(bbox_prev, bbox_next)]
+                            print(f"bbox for frame #{real_fn}:", bbox_this)
+                            add_ground_truth(real_fn, bbox_this)
                     else:
-                        frame['ground_truth'] = fo.Detections(detections=[
-                            fo.Detection(label=obj['label'],
-                                         bounding_box=snapshot['bbox'])
-                        ])
+                        add_ground_truth(real_fns[j], snapshot['bbox'])
+
             dataset.add_sample(sample)
 
     dataset_type = types[task.type][export_type]
