@@ -458,6 +458,11 @@ export default {
       fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
     }
   },
+  beforeRouteLeave(to, from, next) {
+    if (this.dirty) {
+      this.saveChanges().then(() => next())
+    } else next()
+  },
 }
 </script>
 
