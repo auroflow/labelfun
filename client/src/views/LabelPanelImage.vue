@@ -345,7 +345,7 @@ export default {
   },
   methods: {
     chooseBox(index) {
-      this.chosenBox = this.entity.annotation[index]
+      if (!this.canvasDrawing) this.chosenBox = this.entity.annotation[index]
     },
 
     unchooseBox() {
@@ -396,8 +396,10 @@ export default {
     },
 
     deleteBox(box) {
-      this.dirty = true
-      this.$store.dispatch('entity/deleteBox', box)
+      if (box) {
+        this.dirty = true
+        this.$store.dispatch('entity/deleteBox', box)
+      }
     },
 
     saveChanges() {
@@ -434,6 +436,13 @@ export default {
       this.chosenBox = null
       this.canvasDrawing = false
     },
+  },
+  mounted() {
+    window.addEventListener('keyup', (event) => {
+      if (event.key === 'Delete') {
+        this.deleteBox(this.chosenBox)
+      }
+    })
   },
   beforeRouteEnter(to, from, next) {
     fetchTaskAndEntity(to.params.task_id, to.params.entity_idx, next)
