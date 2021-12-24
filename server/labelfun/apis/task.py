@@ -207,7 +207,7 @@ class TasksView(MethodView):
         db.session.commit()
 
         return task
-
+ 
 
 @task_bp.route('/export/<int:task_id>', endpoint='export')
 class ExportView(MethodView):

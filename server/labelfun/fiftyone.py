@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import math
 import os
@@ -12,7 +10,7 @@ from labelfun.models import TaskType
 from labelfun.models.task import Task
 
 
-def export_task(task: Task, export_type: str) -> str | None:
+def export_task(task: Task, export_type: str):
     # save entities to temp
     export_dir = current_app.config['EXPORT_DIRECTORY']
     export_zip = os.path.join(export_dir,
@@ -51,8 +49,8 @@ def export_task(task: Task, export_type: str) -> str | None:
 
     if fo.dataset_exists(task.name):
         dataset = fo.load_dataset(task.name)
-    else:
-        dataset = fo.Dataset(task.name)
+        dataset.delete()
+    dataset = fo.Dataset(task.name)
 
     if task.type == TaskType.IMAGE_CLS:
         for entity in task.entities:

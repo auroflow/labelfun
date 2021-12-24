@@ -203,6 +203,17 @@
         </v-card>
       </v-form>
     </v-dialog>
+
+    <v-dialog v-model="exportInProgress" persistent max-width="300px">
+      <v-card>
+        <v-card-title>正在导出……</v-card-title>
+        <v-progress-linear
+          color="primary"
+          indeterminate
+          height="6"
+        ></v-progress-linear>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -254,6 +265,7 @@ export default {
         (v) => v.every((item) => !!item.length) || '标签文字不能为空。',
       ],
       exporting: false,
+      exportInProgress: false,
       allowed_export_types: {
         image_cls: [
           {
@@ -432,7 +444,7 @@ export default {
     },
     exportTask() {
       if (this.$refs.exportForm.validate()) {
-        NProgress.start()
+        this.exportInProgress = true
         APIService.exportTask(this.task.id, this.exportOptions)
           .then(({ data }) => {
             const url = window.URL.createObjectURL(
@@ -451,7 +463,7 @@ export default {
             this.$store.dispatch('message/pushError', err)
           })
           .finally(() => {
-            NProgress.done()
+            this.exportInProgress = false
           })
       }
     },
