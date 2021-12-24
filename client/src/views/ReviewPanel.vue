@@ -285,8 +285,8 @@ function fetchTaskAndEntity(task_id, entity_idx, next) {
   store
     .dispatch('task/fetchTask', task_id)
     .then(() => {
-      if (store.state.user.user.id !== store.state.task.task.labeler?.id) {
-        return Promise.reject({ message: '无标注权限。' })
+      if (store.state.user.user.id !== store.state.task.task.reviewer?.id) {
+        return Promise.reject({ message: '无审核权限。' })
       } else {
         const entities = store.state.task.task.entities
         if (entity_idx < 0 || entity_idx >= entities.length) {
@@ -370,7 +370,7 @@ export default {
 
     playbackControllerStyle() {
       return {
-        bottom: (this.viewOnly ? 70 : 110) + 'px',
+        bottom: (this.viewOnly ? 50 : 110) + 'px',
       }
     },
   },
