@@ -13,6 +13,7 @@
     @mouseup="resizing = ''"
     @wheel="resizeImage"
   >
+    <slot></slot>
     <img
       ref="image"
       id="image"

@@ -126,6 +126,7 @@ router.beforeEach((to, from, next) => {
       type: 'error',
       text: '请登录。',
     })
+    NProgress.done()
     next('/login')
   }
   // routes hidden for logged-in users, e.g. login and register pages

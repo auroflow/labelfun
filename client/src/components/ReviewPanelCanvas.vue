@@ -39,6 +39,7 @@
         :review-mode="true"
       ></label-panel-box>
     </template>
+    <slot></slot>
   </v-sheet>
 </template>
 

@@ -43,7 +43,7 @@
             height="50"
             v-bind="attrs"
             v-on="on"
-            :disabled="canvasDrawing"
+            :disabled="canvasDrawing || entity.status === 'done'"
             @click="toggleLabelChooser"
           >
             <v-icon dark size="30"> mdi-vector-square-plus </v-icon>
@@ -215,7 +215,9 @@
               >{{ box.label }}</v-chip
             >
             <template v-slot:append>
-              <v-icon @click="deleteBox(box)">mdi-close-circle</v-icon>
+              <v-icon v-if="entity.status !== 'done'" @click="deleteBox(box)"
+                >mdi-close-circle</v-icon
+              >
             </template>
           </v-alert>
         </div>
@@ -264,16 +266,49 @@
         </v-sheet>
       </v-dialog-transition>
 
-      <label-panel-canvas
-        :in-label-chooser="inLabelChooser"
-        :image="entity"
-        :boxes="entity.annotation"
-        :canvas-drawing="canvasDrawing"
-        :chosen-box="getChosenBox"
-        @new-box-drawn="addNewBox"
-        @choose-box="chooseBox"
-        @resize-box="resizeBox"
-      ></label-panel-canvas>
+      <v-hover>
+        <template>
+          <label-panel-canvas
+            :in-label-chooser="inLabelChooser"
+            :image="entity"
+            :boxes="entity.annotation"
+            :canvas-drawing="canvasDrawing"
+            :chosen-box="getChosenBox"
+            @new-box-drawn="addNewBox"
+            @choose-box="chooseBox"
+            @resize-box="resizeBox"
+          >
+            <v-fade-transition>
+              <v-overlay
+                v-if="entity.status === 'done'"
+                v-model="showOverlay"
+                absolute
+                color="#f0ffff"
+                z-index="1000"
+              >
+                <v-container>
+                  <v-row justify="center">
+                    <v-icon
+                      color="green darken-3"
+                      x-large
+                      @click="showOverlay = false"
+                    >
+                      mdi-check-circle
+                    </v-icon>
+                  </v-row>
+                  <v-row justify="center">
+                    <p
+                      class="text-body-1 font-weight-bold green--text text--darken-3"
+                    >
+                      已完成
+                    </p>
+                  </v-row>
+                </v-container>
+              </v-overlay>
+            </v-fade-transition>
+          </label-panel-canvas>
+        </template>
+      </v-hover>
     </v-main>
   </v-app>
 </template>
@@ -331,6 +366,7 @@ export default {
     inLabelChooser: false, // whether the cursor is in label chooser
     chosenBox: null,
     canvasDrawing: false,
+    showOverlay: true,
   }),
   computed: {
     ...mapState({
@@ -396,7 +432,7 @@ export default {
     },
 
     deleteBox(box) {
-      if (box) {
+      if (box && this.entity.status !== 'done') {
         this.dirty = true
         this.$store.dispatch('entity/deleteBox', box)
       }
@@ -435,12 +471,15 @@ export default {
       this.inLabelChooser = false // whether the cursor is in label chooser
       this.chosenBox = null
       this.canvasDrawing = false
+      this.showOverlay = true
     },
   },
   mounted() {
     window.addEventListener('keyup', (event) => {
       if (event.key === 'Delete') {
         this.deleteBox(this.chosenBox)
+      } else if (event.key === 'Enter') {
+        this.showOverlay = false
       }
     })
   },

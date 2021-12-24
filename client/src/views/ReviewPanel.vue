@@ -101,11 +101,42 @@
     </v-footer>
 
     <v-main>
-      <review-panel-canvas
-        :image="imageURL"
-        :bboxes="bboxes"
-        :labels="labels"
-      ></review-panel-canvas>
+      <v-hover>
+        <review-panel-canvas
+          :image="imageURL"
+          :bboxes="bboxes"
+          :labels="labels"
+        >
+          <v-fade-transition>
+            <v-overlay
+              v-if="entity.status === 'done'"
+              v-model="showOverlay"
+              color="#f0ffff"
+              id="overlay"
+              z-index="1000"
+            >
+              <v-container>
+                <v-row justify="center">
+                  <v-icon
+                    color="green darken-3"
+                    x-large
+                    @click="showOverlay = false"
+                  >
+                    mdi-check-circle
+                  </v-icon>
+                </v-row>
+                <v-row justify="center">
+                  <p
+                    class="text-body-1 font-weight-bold green--text text--darken-3"
+                  >
+                    已完成
+                  </p>
+                </v-row>
+              </v-container>
+            </v-overlay>
+          </v-fade-transition>
+        </review-panel-canvas>
+      </v-hover>
 
       <v-card
         v-if="task.type === 'video_seg'"
@@ -210,7 +241,13 @@
 
       <v-card color="rgb(128,128,128, 0.75)" class="review-buttons">
         <v-card-actions>
-          <v-btn dark class="red" @click="review('incorrect')">错误</v-btn>
+          <v-btn
+            dark
+            class="red"
+            @click="review('incorrect')"
+            :disabled="entity.status === 'done'"
+            >错误</v-btn
+          >
           <v-spacer></v-spacer>
           <v-icon v-if="entity.status === 'unreviewed'" color="grey" size="30">
             mdi-help-circle
@@ -220,7 +257,13 @@
           </v-icon>
           <v-icon v-else color="red" size="30"> mdi-close-circle </v-icon>
           <v-spacer></v-spacer>
-          <v-btn dark class="green" @click="review('correct')">正确</v-btn>
+          <v-btn
+            dark
+            class="green"
+            @click="review('correct')"
+            :disabled="entity.status === 'done'"
+            >正确</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-main>
@@ -268,11 +311,16 @@ export default {
       type: Number,
       required: true,
     },
+    viewOnly: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data: () => ({
     currentFrame: 1,
     playing: false,
+    showOverlay: true,
   }),
 
   computed: {
@@ -326,7 +374,13 @@ export default {
           },
         })
         .then(() => {
-          this.$store.dispatch('message/pushSuccess', '已保存。')
+          this.$store.dispatch('message/pushSuccess', '已保存。').then(() =>
+            setTimeout(() => {
+              if (this.entity_idx < this.task.entity_count - 1) {
+                this.goToEntity(this.entity_idx + 1)
+              }
+            }, 500)
+          )
         })
         .catch((err) => {
           this.$store.dispatch('message/pushError', err)
@@ -346,6 +400,7 @@ export default {
     reset() {
       this.dirty = false
       this.currentFrame = 1
+      this.showOverlay = true
     },
 
     play() {
@@ -383,6 +438,13 @@ export default {
 </script>
 
 <style scoped>
+#overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 40px;
+}
 .review-buttons {
   z-index: 200;
   position: absolute;

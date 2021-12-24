@@ -8,6 +8,7 @@
     :color="messages.length ? messages[0].type : null"
     timeout="-1"
     :value="true"
+    style="z-index: 10000"
   >
     {{ messages.length ? messages[0].text : '' }}
     <template v-slot:action="{ attrs }">
