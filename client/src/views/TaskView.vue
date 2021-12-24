@@ -21,19 +21,23 @@
     <template
       v-if="task.progress === 'unpublished' && task.creator.id === user.id"
     >
-      <v-btn class="mr-2" @click="showAddEntities"> 添加{{ ENTITY }} </v-btn>
-      <v-btn class="mr-2" @click="showModify">修改任务</v-btn>
-      <v-btn class="mr-2 green" dark @click="publish">发布任务</v-btn>
-      <v-btn class="mr-2 warning" @click="deleteTask">删除任务</v-btn>
+      <v-btn class="mr-2 primary" @click="showAddEntities">
+        添加{{ ENTITY }}
+      </v-btn>
+      <v-btn class="mr-2 primary" @click="showModify">修改任务</v-btn>
+      <v-btn class="mr-2 secondary" dark @click="publish">发布任务</v-btn>
+      <v-btn class="mr-2 error" @click="deleteTask">删除任务</v-btn>
     </template>
 
     <template v-if="task.progress === 'unlabeled'">
-      <v-btn class="mr-2" @click="claimTask('label')"> 领取标注任务 </v-btn>
+      <v-btn class="mr-2 primary" @click="claimTask('label')">
+        领取标注任务
+      </v-btn>
     </template>
 
     <template v-if="task.progress === 'labeling'">
       <v-btn
-        class="mr-2"
+        class="mr-2 primary"
         v-if="task.labeler.id === user.id"
         :to="{
           name: label[task.type],
@@ -42,13 +46,19 @@
       >
         去标注
       </v-btn>
-      <v-btn class="mr-2" v-if="task.label_done" @click="completeTask('label')">
+      <v-btn
+        class="mr-2 secondary"
+        v-if="task.label_done"
+        @click="completeTask('label')"
+      >
         提交标注结果
       </v-btn>
     </template>
 
     <template v-if="task.progress === 'unreviewed'">
-      <v-btn class="mr-2" @click="claimTask('review')"> 领取审核任务 </v-btn>
+      <v-btn class="mr-2 primary" @click="claimTask('review')">
+        领取审核任务
+      </v-btn>
     </template>
 
     <template v-if="task.progress === 'reviewing'">
@@ -90,6 +100,7 @@
                 entity.thumb_key +
                 (task.type === 'video_seg' ? '-000001' : '')
               "
+              lazy-src="/loading.jpg"
             >
               <v-fade-transition>
                 <v-overlay
@@ -109,8 +120,13 @@
     </v-row>
 
     <!-- Upload entities -->
-    <v-dialog v-model="showDialog" persistent max-width="600px">
-      <v-card>
+    <v-dialog
+      v-model="showDialog"
+      persistent
+      max-width="600px"
+      class="rounded-lg"
+    >
+      <v-card rounded class="rounded-lg">
         <v-card-title>添加{{ ENTITY }}</v-card-title>
         <v-card-text>
           <v-file-input
