@@ -7,7 +7,7 @@
       <v-container>
         <v-row>
           <v-col v-for="task in items" :key="task.id" cols="12" lg="6">
-            <v-card>
+            <v-card elevation="2" rounded>
               <v-card-title>{{ task.name }}</v-card-title>
               <v-card-text>
                 <v-container>
@@ -52,7 +52,10 @@
                 </v-container>
               </v-card-text>
               <v-card-actions>
-                <v-btn :to="{ name: 'task', params: { id: task.id } }">
+                <v-btn
+                  :to="{ name: 'task', params: { id: task.id } }"
+                  class="primary"
+                >
                   查看详情
                 </v-btn>
               </v-card-actions>
