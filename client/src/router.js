@@ -126,6 +126,15 @@ const router = new Router({
         requiresAuth: true,
       },
     },
+    {
+      path: '/404',
+      name: '404',
+      component: () => import('./views/NotFound.vue'),
+    },
+    {
+      path: '*',
+      redirect: { name: '404' },
+    },
   ],
 })
 
