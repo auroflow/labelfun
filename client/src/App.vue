@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <template
-      v-if="$route.name.startsWith('label') || $route.name === 'review'"
+      v-if="$route.name.startsWith('label') || $route.name.endsWith('view')"
     >
       <router-view></router-view>
     </template>

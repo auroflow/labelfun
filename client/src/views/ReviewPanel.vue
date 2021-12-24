@@ -109,7 +109,7 @@
         >
           <v-fade-transition>
             <v-overlay
-              v-if="entity.status === 'done'"
+              v-if="entity.status === 'done' && !viewOnly"
               v-model="showOverlay"
               color="#f0ffff"
               id="overlay"
@@ -141,6 +141,7 @@
       <v-card
         v-if="task.type === 'video_seg'"
         class="rounded-pill playback-controller"
+        :style="playbackControllerStyle"
         color="rgb(128,128,128, 0.75)"
       >
         <v-card-actions>
@@ -239,7 +240,11 @@
         </v-card-actions>
       </v-card>
 
-      <v-card color="rgb(128,128,128, 0.75)" class="review-buttons">
+      <v-card
+        color="rgb(128,128,128, 0.75)"
+        class="review-buttons"
+        v-if="!viewOnly"
+      >
         <v-card-actions>
           <v-btn
             dark
@@ -362,6 +367,12 @@ export default {
       if (this.task.type === 'image_cls') return this.entity.annotation
       else return this.entity.annotation.map((item) => item.label)
     },
+
+    playbackControllerStyle() {
+      return {
+        bottom: (this.viewOnly ? 70 : 110) + 'px',
+      }
+    },
   },
 
   methods: {
@@ -389,7 +400,7 @@ export default {
 
     goToEntity(entity_idx) {
       this.$router.push({
-        name: 'review',
+        name: this.$route.name,
         params: {
           task_id: this.task_id.toString(),
           entity_idx: entity_idx.toString(),
@@ -458,7 +469,6 @@ export default {
 .playback-controller {
   z-index: 200;
   position: absolute;
-  bottom: 110px;
   left: 0;
   right: 0;
   margin-left: auto;
