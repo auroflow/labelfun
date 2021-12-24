@@ -122,7 +122,7 @@ class TasksQuerySchema(Schema):
     labeler = Integer(allow_none=True)
     reviewer = Integer(allow_none=True)
     page = Integer(load_default=1)
-    per_page = Integer(load_default=100, validate=[Range(max=100)])
+    per_page = Integer(load_default=1000, validate=[Range(max=100)])
     order = String(load_default='desc',
                    validate=[OneOf(['desc', 'asc'])])
 

@@ -286,7 +286,10 @@ function fetchTaskAndEntity(task_id, entity_idx, next) {
   store
     .dispatch('task/fetchTask', task_id)
     .then(() => {
-      if (store.state.user.user.id !== store.state.task.task.reviewer?.id) {
+      if (
+        store.state.task.task.status !== 'done' &&
+        store.state.user.user.id !== store.state.task.task.reviewer?.id
+      ) {
         return Promise.reject({ message: '无审核权限。' })
       } else {
         const entities = store.state.task.task.entities
