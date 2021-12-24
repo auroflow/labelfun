@@ -1,6 +1,8 @@
 <template>
   <v-app class="grey darken-2">
     <the-message-bar></the-message-bar>
+
+    <!-- Left nav -->
     <v-navigation-drawer
       :value="true"
       app
@@ -175,6 +177,7 @@
       </template>
     </v-navigation-drawer>
 
+    <!-- right nav -->
     <v-navigation-drawer
       :value="true"
       app
@@ -200,7 +203,7 @@
             dark
             dense
             transition="v-expand-transition"
-            @click="chooseBox(box)"
+            @click="chooseBox(index)"
             v-click-outside="{
               handler: unchooseBox,
               include: getIncludedElements,
