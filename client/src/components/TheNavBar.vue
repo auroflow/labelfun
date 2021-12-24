@@ -1,5 +1,9 @@
 <template>
   <v-app-bar app clipped-left color="primary" dark>
+    <v-app-bar-nav-icon
+      v-if="hasDrawer && $vuetify.breakpoint.mobile"
+      @click="drawer = true"
+    ></v-app-bar-nav-icon>
     <v-toolbar-title class="mr-5">{{ name }}</v-toolbar-title>
     <v-btn
       v-for="link in linksPermitted"
@@ -27,6 +31,10 @@ export default {
       type: String,
       required: true,
     },
+    hasDrawer: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     links() {
@@ -37,8 +45,16 @@ export default {
         ? this.links.filter((link) => !link.meta.requiresNoAuth)
         : this.links.filter((link) => !link.meta.requiresAuth)
     },
-    ...mapGetters('user', {
-      user: 'getCurrentUser',
+    drawer: {
+      get() {
+        return this.$store.state.drawer
+      },
+      set(value) {
+        this.$store.dispatch('setDrawer', value)
+      },
+    },
+    ...mapGetters({
+      user: 'user/getCurrentUser',
     }),
   },
 }

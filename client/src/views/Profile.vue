@@ -1,46 +1,47 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="3">
-        <div class="sticky">
-          <v-sheet color="grey lighten-4" class="pa-4">
-            <v-avatar class="mb-4" color="grey darken-1" size="64"></v-avatar>
-            <div>欢迎，{{ user.name }}！</div>
-            <div class="mt-2"><v-btn @click="logout">注销</v-btn></div>
-          </v-sheet>
+  <div>
+    <v-navigation-drawer app clipped v-model="drawer">
+      <v-sheet color="grey lighten-4" class="pa-4">
+        <v-avatar class="mb-4" color="grey darken-1" size="64"></v-avatar>
+        <div>欢迎，{{ user.name }}！</div>
+        <div class="mt-2"><v-btn @click="logout">注销</v-btn></div>
+      </v-sheet>
 
-          <v-divider></v-divider>
+      <v-divider></v-divider>
 
-          <v-tabs v-model="tab" vertical>
-            <v-tab
-              v-for="{ name, text } in links"
-              :key="`${name}-sidebar-link`"
-              class="text-center"
-            >
-              {{ text }}
-            </v-tab>
-          </v-tabs>
-        </div>
-      </v-col>
-
-      <v-col>
-        <v-tabs-items v-model="tab">
-          <v-tab-item>
-            <profile-user-info :user="user"></profile-user-info>
-          </v-tab-item>
-          <v-tab-item>
-            <task-list :tasks="createdBy(user.id)"></task-list>
-          </v-tab-item>
-          <v-tab-item>
-            <task-list :tasks="labeledBy(user.id)"></task-list>
-          </v-tab-item>
-          <v-tab-item>
-            <task-list :tasks="reviewedBy(user.id)"></task-list>
-          </v-tab-item>
-        </v-tabs-items>
-      </v-col>
-    </v-row>
-  </v-container>
+      <v-tabs v-model="tab" vertical>
+        <v-tab
+          v-for="{ name, text } in links"
+          :key="`${name}-sidebar-link`"
+          class="text-center"
+        >
+          {{ text }}
+        </v-tab>
+      </v-tabs>
+    </v-navigation-drawer>
+    <v-main>
+      <v-container>
+        <v-row>
+          <v-col>
+            <v-tabs-items v-model="tab">
+              <v-tab-item>
+                <profile-user-info :user="user"></profile-user-info>
+              </v-tab-item>
+              <v-tab-item>
+                <task-list :tasks="createdBy(user.id)"></task-list>
+              </v-tab-item>
+              <v-tab-item>
+                <task-list :tasks="labeledBy(user.id)"></task-list>
+              </v-tab-item>
+              <v-tab-item>
+                <task-list :tasks="reviewedBy(user.id)"></task-list>
+              </v-tab-item>
+            </v-tabs-items>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </div>
 </template>
 
 <script>
@@ -85,6 +86,14 @@ export default {
     }
   },
   computed: {
+    drawer: {
+      get() {
+        return this.$store.state.drawer
+      },
+      set(value) {
+        this.$store.dispatch('setDrawer', value)
+      },
+    },
     ...mapGetters({
       user: 'user/getCurrentUser',
       createdBy: 'task/getTasksByCreator',

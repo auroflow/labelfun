@@ -15,8 +15,28 @@ const store = new Vuex.Store({
     task,
     entity,
   },
+
   state: {
     baseURL: 'http://r3ncixdy0.hd-bkt.clouddn.com/',
+    drawer: true,
+  },
+
+  mutations: {
+    SET_DRAWER(state, value) {
+      state.drawer = value
+    },
+    TOGGLE_DRAWER(state) {
+      state.drawer = !state.drawer
+    },
+  },
+
+  actions: {
+    setDrawer({ commit }, value) {
+      commit('SET_DRAWER', value)
+    },
+    toggleDrawer({ commit }) {
+      commit('TOGGLE_DRAWER')
+    },
   },
 })
 
