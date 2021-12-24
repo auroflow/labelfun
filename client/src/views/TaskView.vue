@@ -63,7 +63,7 @@
 
     <template v-if="task.progress === 'reviewing'">
       <v-btn
-        class="mr-2"
+        class="mr-2 primary"
         v-if="task.reviewer.id === user.id"
         :to="{
           name: 'review',
@@ -73,7 +73,7 @@
         去审核
       </v-btn>
       <v-btn
-        class="mr-2"
+        class="mr-2 secondary"
         v-if="task.review_done"
         @click="completeTask('review')"
       >
@@ -82,9 +82,19 @@
     </template>
 
     <template v-if="task.progress === 'done'">
-      <v-btn class="mr-2" @click="exporting = true"> 导出标注结果 </v-btn>
+      <v-btn
+        class="mr-2 primary"
+        :to="{
+          name: 'view',
+          params: { task_id: task.id, entity_idx: 0 },
+        }"
+      >
+        查看标注
+      </v-btn>
+      <v-btn class="mr-2 secondary" @click="exporting = true"> 导出标注 </v-btn>
     </template>
 
+    <!-- Entities preview -->
     <p class="text-h5 mt-5">{{ ENTITY }}概览</p>
     <v-row class="mb-5" justify="start" dense>
       <v-col
@@ -480,6 +490,8 @@ export default {
           })
           .finally(() => {
             this.exportInProgress = false
+            this.exporting = false
+            this.$store.dispatch('message/pushSuccess', '导出成功。')
           })
       }
     },
