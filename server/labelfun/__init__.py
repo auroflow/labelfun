@@ -67,6 +67,8 @@ def register_commands(app: APIFlask):
             marker = None
             while True:
                 ret, eof, _ = bucket.list(bucket_name, prefix, marker)
+                if not ret:
+                    break
                 for item in ret.get('items'):
                     bucket.delete(bucket_name, item.get('key'))
                 if not eof:

@@ -1,3 +1,2 @@
 FLASK_APP=labelfun
-FLASK_ENV=development
-AUTHLIB_INSECURE_TRANSPORT=true
+FLASK_ENV=production
