@@ -76,13 +76,6 @@ def register_commands(app: APIFlask):
 
         delete_prefix("")
 
-        user1 = User(id=1001, name='Amy', password='12345678',
-                     email='amy@email.com', type=0)
-        user2 = User(id=1002, name='Bob', password=r'!@#$%^&*',
-                     email='bob@email.com', type=0)
-        admin = User(id=2001, name='Admin', password='abcdefgh',
-                     email='admin@email.com', type=1)
-
         # image1 = Entity(type=0, key='key1', thumb_key="t1", path='path1',
         #                 status=0)
         # image2 = Entity(type=0, key='key2', thumb_key="t2", path='path2',
@@ -118,7 +111,7 @@ def register_commands(app: APIFlask):
         # task3.entities.append(image5)
         # task3.entities.append(image6)
 
-        db.session.add_all([user1, user2, admin])
+        # db.session.add_all([user1, user2, admin])
         # db.session.add_all([image1, image2, task1,
         #                     video1, video2, task2])
         db.session.commit()

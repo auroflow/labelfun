@@ -19,18 +19,24 @@ class BaseConfig:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev key')
     QINIU_ACCESS_KEY = os.getenv('QINIU_ACCESS_KEY', 'access key')
     QINIU_SECRET_KEY = os.getenv('QINIU_SECRET_KEY', 'secret key')
-    QINIU_BUCKET_NAME = 'taijian'
-    QINIU_BUCKET_DOMAIN = 'http://r3ncixdy0.hd-bkt.clouddn.com/'
-    EXPORT_DIRECTORY = 'E:\\Users\\imbiansl\\Desktop\\export\\'
+    QINIU_BUCKET_NAME = os.getenv('QINIU_BUCKET_NAME')
+    QINIU_BUCKET_DOMAIN = os.getenv('QINIU_BUCKET_DOMAIN')
 
 
 class DevelopmentConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = sqlite_prefix + \
-                              'E:\\Users\\imbiansl\\Desktop\\labelfun\\database.db'
+    DEV_SQLALCHEMY_DATABASE_URI = sqlite_prefix + \
+                                  'E:\\Users\\imbiansl\\Desktop\\labelfun\\database.db'
+    SQLALCHEMY_DATABASE_URI = os.getenv('LABELFUN_DATABASE_URL')
+    INVITATION_CODE = '123456'
+    INVITATION_CODE_ADMIN = 'abcdef'
+    EXPORT_DIRECTORY = 'E:\\Users\\imbiansl\\Desktop\\export\\'
 
 
 class ProductionConfig(BaseConfig):
-    pass
+    SQLALCHEMY_DATABASE_URL = os.getenv('LABELFUN_DATABASE_URL')
+    INVITATION_CODE = os.getenv('INVITATION_CODE')
+    INVITATION_CODE_ADMIN = os.getenv('INVITATION_CODE_ADMIN')
+    EXPORT_DIRECTORY = os.getenv('EXPORT_DIRECTORY')
 
 
 class TestingConfig(BaseConfig):

@@ -17,7 +17,7 @@ const store = new Vuex.Store({
   },
 
   state: {
-    baseURL: 'http://r3ncixdy0.hd-bkt.clouddn.com/',
+    baseURL: process.env.VUE_APP_QINIU_BUCKET_DOMAIN,
     drawer: true,
   },
 

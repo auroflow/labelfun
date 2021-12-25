@@ -2,9 +2,10 @@
   <div>
     <v-navigation-drawer app clipped v-model="drawer">
       <v-sheet color="grey lighten-4" class="pa-4">
-        <v-avatar class="mb-4" color="grey darken-1" size="64"></v-avatar>
         <div>欢迎，{{ user.name }}！</div>
-        <div class="mt-2"><v-btn @click="logout">注销</v-btn></div>
+        <div class="mt-2">
+          <v-btn @click="logout" class="secondary">注销</v-btn>
+        </div>
       </v-sheet>
 
       <v-divider></v-divider>

@@ -1,5 +1,5 @@
 from apiflask import APIBlueprint, input, output, abort
-from flask import g
+from flask import g, current_app
 from flask.views import MethodView
 
 from labelfun.apis.auth import auth_required
@@ -21,13 +21,21 @@ class UsersView(MethodView):
         name = data['name']
         email = data['email']
         password = data['password']
+        invitation = data['invitation']
 
         user_with_same_email = User.query.filter_by(email=email).first()
         if user_with_same_email is not None:
             abort(400, 'DUPLICATED_EMAIL')
+        if invitation == current_app.config['INVITATION_CODE']:
+            new_user = User(name=name, email=email,
+                            password=password, type=UserType.USER)
+        elif invitation == current_app.config['INVITATION_CODE_ADMIN']:
+            new_user = User(name=name, email=email,
+                            password=password, type=UserType.ADMIN)
+        else:
+            abort(400, '邀请码不存在。')
+            return
 
-        new_user = User(name=name, email=email,
-                        password=password, type=UserType.USER)
         db.session.add(new_user)
         db.session.commit()
         return new_user

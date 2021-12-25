@@ -46,6 +46,17 @@
                 :append-icon="showRepeatPassword ? 'mdi-eye' : 'mdi-eye-off'"
                 @click:append="showRepeatPassword = !showRepeatPassword"
               />
+              <v-text-field
+                :type="showInvitation ? 'text' : 'password'"
+                label="邀请码"
+                v-model="invitationCode"
+                :rules="invitationCodeRules"
+                required
+                validate-on-blur
+                prepend-icon="mdi-account-plus"
+                :append-icon="showInvitation ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append="showInvitation = !showInvitation"
+              />
             </v-form>
           </v-card-text>
           <v-divider></v-divider>
@@ -73,16 +84,21 @@ export default {
       email: '',
       password: '',
       repeatPassword: '',
+      invitationCode: '',
 
-      nameRules: [(v) => !!v || '名字是必填项。'],
+      nameRules: [
+        (v) => !!v || '名字是必填项。',
+        (v) => v.length <= 120 || '名字过长。',
+      ],
       emailRules: [
         (v) => !!v || '邮箱是必填项。',
+        (v) => v.length <= 120 || '邮箱过长。',
         (v) => validateEmail(v) || '请输入格式正确的邮箱。',
       ],
       passwordRules: [
         (v) => !!v || '密码是必填项。',
         (v) => v.length >= 8 || '密码长度至少应为 8 位。',
-        (v) => v.length <= 32 || '密码长度最多应为 32 位。',
+        (v) => v.length <= 64 || '密码长度最多应为 64 位。',
         (v) =>
           (/[A-Za-z]/.test(v) &&
             /[0-9]/.test(v) &&
@@ -93,9 +109,11 @@ export default {
         (v) => !!v || '重复密码是必填项。',
         (v) => v === this.password || '两次密码不一致，请检查。',
       ],
+      invitationCodeRules: [(v) => !!v || '邀请码是必填项。'],
 
       showPassword: false,
       showRepeatPassword: false,
+      showInvitation: false,
     }
   },
 
@@ -111,6 +129,7 @@ export default {
           name: this.name,
           email: this.email,
           password: this.password,
+          invitation: this.invitationCode,
         })
         .then(() => {
           this.$store.dispatch('message/pushSuccess', '注册成功，请登录。')

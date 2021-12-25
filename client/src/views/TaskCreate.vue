@@ -1,10 +1,15 @@
 <template>
   <v-container mt-5>
     <p class="display-1">新建任务</p>
-    <v-form>
+    <v-form ref="newTaskForm">
       <v-row>
         <v-col cols="6">
-          <v-text-field label="任务名" v-model="newTask.name" required>
+          <v-text-field
+            label="任务名"
+            v-model="newTask.name"
+            :rules="taskNameRules"
+            required
+          >
           </v-text-field>
         </v-col>
         <v-col cols="6">
@@ -13,6 +18,7 @@
             v-model="newTask.type"
             :items="taskTypes"
             required
+            :rules="taskTypeRules"
           ></v-select>
         </v-col>
       </v-row>
@@ -24,6 +30,7 @@
             multiple
             :append-icon="null"
             required
+            :rules="labelRules"
             chips
             deletable-chips
           >
@@ -85,11 +92,25 @@ export default {
           value: 'video_seg',
         },
       ],
+      taskNameRules: [
+        (v) => !!v || '请输入任务名。',
+        (v) => v.length < 120 || '任务名过长。',
+      ],
+      taskTypeRules: [(v) => !!v || '请选择任务类型。'],
+      labelRules: [
+        (v) => !!v.length || '请填写标签。',
+        (v) => v.every((item) => !!item.length) || '标签文字不能为空。',
+      ],
     }
   },
   computed: {},
   methods: {
     submit() {
+      if (this.$refs.newTaskForm.validate()) {
+        this.createTask()
+      }
+    },
+    createTask() {
       this.$store.dispatch('task/createTask', this.newTask).then(() => {
         const id = this.$store.state.task.task.id
         this.$store.dispatch('message/pushSuccess', '任务创建成功。')

@@ -3,11 +3,11 @@
     <v-row class="align-center justify-center">
       <v-col>
         <v-card width="400" class="mx-auto my-5">
-          <v-card-title>
-            <h1 class="display-1">登录</h1>
-          </v-card-title>
-          <v-card-text>
-            <v-form refs="loginForm">
+          <v-form refs="loginForm">
+            <v-card-title>
+              <h1 class="display-1">登录</h1>
+            </v-card-title>
+            <v-card-text>
               <v-text-field
                 label="邮箱"
                 v-model="email"
@@ -28,14 +28,14 @@
                 @keyup.enter="submit"
                 required
               />
-            </v-form>
-          </v-card-text>
-          <v-divider></v-divider>
-          <v-card-actions>
-            <v-btn color="secondary" :to="{ name: 'signup' }">注册</v-btn>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" @click="submit">登录</v-btn>
-          </v-card-actions>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions>
+              <v-btn color="secondary" :to="{ name: 'signup' }">注册</v-btn>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" @click="submit">登录</v-btn>
+            </v-card-actions>
+          </v-form>
         </v-card>
       </v-col>
     </v-row>
@@ -54,6 +54,7 @@ export default {
     return {
       email: '',
       password: '',
+      invitation: '',
       error: null,
       showPassword: false,
     }
@@ -65,6 +66,7 @@ export default {
       if (!this.$v.email.$dirty) return errors
       !this.$v.email.required && errors.push('邮箱为必填项。')
       !this.$v.email.email && errors.push('请输入正确格式的邮箱。')
+      !this.$v.email.maxLength && errors.push('邮箱过长。')
       return errors
     },
     passwordErrors() {
@@ -108,6 +110,7 @@ export default {
     email: {
       required,
       email,
+      maxLength: maxLength(120),
     },
     password: {
       required,
