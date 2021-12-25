@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from apiflask import APIBlueprint, input, output, abort, pagination_builder
@@ -222,6 +223,7 @@ class ExportView(MethodView):
         if export_dir is None:
             abort(400, 'EXPORT_DIR_NOT_FOUND')
         try:
+            export_dir = os.path.join(os.getcwd(), export_dir)
             print('Exporting', export_dir)
             return send_file(export_dir, as_attachment=True)
         except FileNotFoundError:
