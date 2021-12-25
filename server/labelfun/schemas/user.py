@@ -37,6 +37,7 @@ class UserCreateInSchema(Schema):
         Regexp(r"(.*?)[!\"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]",
                error="Password must contain a special character.")
     ])
+    invitation = String(required=True)
 
 
 class UserEditInSchema(Schema):

@@ -176,7 +176,12 @@
         <v-card>
           <v-card-title>修改任务信息</v-card-title>
           <v-card-text>
-            <v-text-field v-model="newName" label="任务名" required>
+            <v-text-field
+              v-model="newName"
+              label="任务名"
+              :rules="taskNameRules"
+              required
+            >
             </v-text-field>
             <v-combobox
               label="可供标注的标签"
@@ -286,6 +291,10 @@ export default {
       modifying: false,
       newName: null,
       newLabels: [],
+      taskNameRules: [
+        (v) => !!v || '请输入任务名。',
+        (v) => v.length < 120 || '任务名过长。',
+      ],
       labelRules: [
         (v) => !!v.length || '请填写标签。',
         (v) => v.every((item) => !!item.length) || '标签文字不能为空。',

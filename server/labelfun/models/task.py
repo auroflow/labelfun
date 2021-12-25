@@ -8,12 +8,12 @@ class Task(db.Model):
     __tablename__ = 'task'
 
     id: int = db.Column(db.Integer, primary_key=True)
-    name: str = db.Column(db.String, nullable=False)
+    name: str = db.Column(db.String(128), nullable=False)
     time: datetime = db.Column(db.DateTime, nullable=False)
-    type: TaskType = db.Column(db.Integer, nullable=False)
-    labels: str = db.Column(db.String)  # separated by commas
+    type: TaskType = db.Column(db.Enum(TaskType), nullable=False)
+    labels: str = db.Column(db.Text)  # separated by commas
     published: bool = db.Column(db.Boolean, default=False)
-    status: JobStatus = db.Column(db.Integer, nullable=False)
+    status: JobStatus = db.Column(db.Enum(JobStatus), nullable=False)
     creator_id: int = db.Column(db.Integer, db.ForeignKey('user.id'),
                                 nullable=False)
     labeler_id: int = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -42,17 +42,18 @@ class Entity(db.Model):
     __tablename__ = 'entity'
 
     id: int = db.Column(db.Integer, primary_key=True)
-    path: str = db.Column(db.String, nullable=False)
-    key: str = db.Column(db.String, nullable=False)
-    thumb_key: str = db.Column(db.String, nullable=False)
-    type: TaskType = db.Column(db.Integer, nullable=False)
-    status: JobStatus = db.Column(db.Integer, default=JobStatus.UNLABELED)
+    path: str = db.Column(db.String(512), nullable=False)
+    key: str = db.Column(db.String(512), nullable=False)
+    thumb_key: str = db.Column(db.String(512), nullable=False)
+    type: TaskType = db.Column(db.Enum(TaskType), nullable=False)
+    status: JobStatus = db.Column(db.Enum(JobStatus),
+                                  default=JobStatus.UNLABELED)
     annotation: str = db.Column(db.Text)
     uploaded: bool = db.Column(db.Boolean, default=False)
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
     task = db.relationship('Task', back_populates='entities')
     review: bool = db.Column(db.Boolean, default=False)
-    meta_data: str = db.Column(db.String)
+    meta_data: str = db.Column(db.Text)
     # For video tasks
     frame_count = db.Column(db.Integer)
 

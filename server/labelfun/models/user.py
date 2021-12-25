@@ -3,16 +3,17 @@
 from passlib.hash import argon2
 
 from labelfun.extensions import db
+from labelfun.models import UserType
 
 
 class User(db.Model):
     __tablename__ = 'user'
 
     id: int = db.Column(db.Integer, primary_key=True)
-    name: str = db.Column(db.String, nullable=False)
-    email: str = db.Column(db.String, nullable=False)
-    pwdhash: str = db.Column(db.String, nullable=False)
-    type = db.Column(db.Integer, nullable=False)
+    name: str = db.Column(db.String(128), nullable=False)
+    email: str = db.Column(db.String(128), nullable=False)
+    pwdhash: str = db.Column(db.String(256), nullable=False)
+    type = db.Column(db.Enum(UserType), nullable=False)
 
     created_tasks = db.relationship('Task', foreign_keys='[Task.creator_id]',
                                     back_populates='creator')

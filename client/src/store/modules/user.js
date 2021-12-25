@@ -52,8 +52,7 @@ export const actions = {
       commit('SET_USER_DATA', data)
     })
   },
-  // eslint-disable-next-line no-empty-pattern
-  signup({}, credentials) {
+  signup(context, credentials) {
     return APIService.userCreate(credentials)
   },
   updateInfo({ commit }, info) {
