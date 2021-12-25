@@ -222,6 +222,7 @@ class ExportView(MethodView):
         if export_dir is None:
             abort(400, 'EXPORT_DIR_NOT_FOUND')
         try:
+            print('Exporting', export_dir)
             return send_file(export_dir, as_attachment=True)
         except FileNotFoundError:
             abort(400, 'FILE_NOT_FOUND')
