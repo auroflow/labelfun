@@ -207,7 +207,7 @@ class TasksView(MethodView):
         db.session.commit()
 
         return task
- 
+
 
 @task_bp.route('/export/<int:task_id>', endpoint='export')
 class ExportView(MethodView):
@@ -220,8 +220,8 @@ class ExportView(MethodView):
             abort(400, 'TASK_IS_NOT_DONE')
         export_dir = export_task(task, data['export_type'])
         if export_dir is None:
-            abort(400)
+            abort(400, 'EXPORT_DIR_NOT_FOUND')
         try:
             return send_file(export_dir, as_attachment=True)
         except FileNotFoundError:
-            abort(400)
+            abort(400, 'FILE_NOT_FOUND')
