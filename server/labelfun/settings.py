@@ -33,7 +33,7 @@ class DevelopmentConfig(BaseConfig):
 
 
 class ProductionConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URL = os.getenv('LABELFUN_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv('LABELFUN_DATABASE_URL')
     INVITATION_CODE = os.getenv('INVITATION_CODE')
     INVITATION_CODE_ADMIN = os.getenv('INVITATION_CODE_ADMIN')
     EXPORT_DIRECTORY = os.getenv('EXPORT_DIRECTORY')
