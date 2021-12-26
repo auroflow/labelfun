@@ -35,10 +35,11 @@
       </v-btn>
     </template>
 
-    <template v-if="task.progress === 'labeling'">
+    <template
+      v-if="task.progress === 'labeling' && task.labeler.id === user.id"
+    >
       <v-btn
         class="mr-2 mb-2 primary"
-        v-if="task.labeler.id === user.id"
         :to="{
           name: label[task.type],
           params: { task_id: task.id, entity_idx: 0 },
@@ -61,10 +62,11 @@
       </v-btn>
     </template>
 
-    <template v-if="task.progress === 'reviewing'">
+    <template
+      v-if="task.progress === 'reviewing' && task.reviewer.id === user.id"
+    >
       <v-btn
         class="mr-2 mb-2 primary"
-        v-if="task.reviewer.id === user.id"
         :to="{
           name: 'review',
           params: { task_id: task.id, entity_idx: 0 },
