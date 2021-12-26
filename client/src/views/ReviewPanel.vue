@@ -3,7 +3,12 @@
     <the-message-bar></the-message-bar>
 
     <v-footer app class="d-flex justify-center" dark padless inset>
-      <v-tooltip z-index="300" top color="grey darken-3">
+      <v-tooltip
+        z-index="300"
+        top
+        color="grey darken-3"
+        :disabled="$vuetify.breakpoint.smAndDown"
+      >
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -21,7 +26,12 @@
         <span>返回</span>
       </v-tooltip>
 
-      <v-tooltip z-index="300" top color="grey darken-3">
+      <v-tooltip
+        z-index="300"
+        top
+        color="grey darken-3"
+        :disabled="$vuetify.breakpoint.smAndDown || entity_idx === 0"
+      >
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -39,7 +49,12 @@
         <span>第一个</span>
       </v-tooltip>
 
-      <v-tooltip z-index="300" top color="grey darken-3">
+      <v-tooltip
+        z-index="300"
+        top
+        color="grey darken-3"
+        :disabled="$vuetify.breakpoint.smAndDown || entity_idx === 0"
+      >
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -56,7 +71,13 @@
         </template>
         <span>上一个</span>
       </v-tooltip>
-      <v-tooltip z-index="300" top color="grey darken-3">
+
+      <v-tooltip
+        z-index="300"
+        top
+        color="grey darken-3"
+        :disabled="$vuetify.breakpoint.smAndDown"
+      >
         <template v-slot:activator="{ on, attrs }">
           <v-btn tile icon width="40" height="40" v-bind="attrs" v-on="on">
             <v-icon size="40px"> mdi-circle-small </v-icon>
@@ -64,7 +85,15 @@
         </template>
         <span>{{ entity_idx + 1 }} / {{ task.entity_count }}</span>
       </v-tooltip>
-      <v-tooltip z-index="300" top color="grey darken-3">
+
+      <v-tooltip
+        z-index="300"
+        top
+        color="grey darken-3"
+        :disabled="
+          $vuetify.breakpoint.smAndDown || entity_idx === task.entity_count - 1
+        "
+      >
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -81,7 +110,15 @@
         </template>
         <span>下一个</span>
       </v-tooltip>
-      <v-tooltip z-index="300" top color="grey darken-3">
+
+      <v-tooltip
+        z-index="300"
+        top
+        color="grey darken-3"
+        :disabled="
+          $vuetify.breakpoint.smAndDown || entity_idx === task.entity_count - 1
+        "
+      >
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             tile
@@ -146,7 +183,12 @@
         color="rgb(128,128,128, 0.75)"
       >
         <v-card-actions>
-          <v-tooltip z-index="300" top color="grey darken-3">
+          <v-tooltip
+            z-index="300"
+            top
+            color="grey darken-3"
+            :disabled="$vuetify.breakpoint.smAndDown || currentFrame === 1"
+          >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
@@ -165,7 +207,12 @@
             <span>第一帧</span>
           </v-tooltip>
 
-          <v-tooltip z-index="300" top color="grey darken-3">
+          <v-tooltip
+            z-index="300"
+            top
+            color="grey darken-3"
+            :disabled="$vuetify.breakpoint.smAndDown || currentFrame === 1"
+          >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
@@ -183,7 +230,12 @@
             </template>
             <span>上一帧</span>
           </v-tooltip>
-          <v-tooltip z-index="300" top color="grey darken-3">
+          <v-tooltip
+            z-index="300"
+            top
+            color="grey darken-3"
+            :disabled="$vuetify.breakpoint.smAndDown"
+          >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
@@ -202,7 +254,15 @@
             </template>
             <span>{{ currentFrame }} / {{ entity.frame_count }}</span>
           </v-tooltip>
-          <v-tooltip z-index="300" top color="grey darken-3">
+          <v-tooltip
+            z-index="300"
+            top
+            color="grey darken-3"
+            :disabled="
+              $vuetify.breakpoint.smAndDown ||
+              currentFrame === entity.frame_count
+            "
+          >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
@@ -220,7 +280,15 @@
             </template>
             <span>下一帧</span>
           </v-tooltip>
-          <v-tooltip z-index="300" top color="grey darken-3">
+          <v-tooltip
+            z-index="300"
+            top
+            color="grey darken-3"
+            :disabled="
+              $vuetify.breakpoint.smAndDown ||
+              currentFrame === entity.frame_count
+            "
+          >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 tile
