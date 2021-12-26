@@ -223,6 +223,7 @@
               label="导出类型"
               v-model="exportOptions.export_type"
               :items="allowed_export_types[task.type]"
+              :rules="exportTypeRules"
               required
             ></v-select>
           </v-card-text>
@@ -336,6 +337,7 @@ export default {
       exportOptions: {
         export_type: null,
       },
+      exportTypeRules: [(v) => !!v || '请选择导出类型。'],
     }
   },
   computed: {
