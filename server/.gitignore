@@ -1,4 +1,6 @@
 .qiniu_pythonsdk_hostscache.json
+.flaskenv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
