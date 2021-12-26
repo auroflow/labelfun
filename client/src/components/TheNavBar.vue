@@ -4,7 +4,7 @@
       v-if="hasDrawer && $vuetify.breakpoint.mobile"
       @click="drawer = true"
     ></v-app-bar-nav-icon>
-    <v-toolbar-title class="mr-5">{{ name }}</v-toolbar-title>
+    <v-toolbar-title class="mr-5" v-else>{{ name }}</v-toolbar-title>
     <v-btn
       v-for="link in linksPermitted"
       :key="`${link.name}-header-link`"

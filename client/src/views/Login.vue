@@ -10,6 +10,7 @@
             <v-card-text>
               <v-text-field
                 label="邮箱"
+                type="email"
                 v-model="email"
                 :error-messages="emailErrors"
                 @blur="$v.email.$touch()"

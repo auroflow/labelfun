@@ -21,23 +21,23 @@
     <template
       v-if="task.progress === 'unpublished' && task.creator.id === user.id"
     >
-      <v-btn class="mr-2 primary" @click="showAddEntities">
+      <v-btn class="mr-2 mb-2 primary" @click="showAddEntities">
         添加{{ ENTITY }}
       </v-btn>
-      <v-btn class="mr-2 primary" @click="showModify">修改任务</v-btn>
-      <v-btn class="mr-2 secondary" dark @click="publish">发布任务</v-btn>
-      <v-btn class="mr-2 error" @click="deleteTask">删除任务</v-btn>
+      <v-btn class="mr-2 mb-2 primary" @click="showModify">修改任务</v-btn>
+      <v-btn class="mr-2 mb-2 secondary" dark @click="publish">发布任务</v-btn>
+      <v-btn class="mr-2 mb-2 error" @click="deleteTask">删除任务</v-btn>
     </template>
 
     <template v-if="task.progress === 'unlabeled'">
-      <v-btn class="mr-2 primary" @click="claimTask('label')">
+      <v-btn class="mr-2 mb-2 primary" @click="claimTask('label')">
         领取标注任务
       </v-btn>
     </template>
 
     <template v-if="task.progress === 'labeling'">
       <v-btn
-        class="mr-2 primary"
+        class="mr-2 mb-2 primary"
         v-if="task.labeler.id === user.id"
         :to="{
           name: label[task.type],
@@ -47,7 +47,7 @@
         去标注
       </v-btn>
       <v-btn
-        class="mr-2 secondary"
+        class="mr-2 mb-2 secondary"
         v-if="task.label_done"
         @click="completeTask('label')"
       >
@@ -56,14 +56,14 @@
     </template>
 
     <template v-if="task.progress === 'unreviewed'">
-      <v-btn class="mr-2 primary" @click="claimTask('review')">
+      <v-btn class="mr-2 mb-2 primary" @click="claimTask('review')">
         领取审核任务
       </v-btn>
     </template>
 
     <template v-if="task.progress === 'reviewing'">
       <v-btn
-        class="mr-2 primary"
+        class="mr-2 mb-2 primary"
         v-if="task.reviewer.id === user.id"
         :to="{
           name: 'review',
@@ -73,7 +73,7 @@
         去审核
       </v-btn>
       <v-btn
-        class="mr-2 secondary"
+        class="mr-2 mb-2 secondary"
         v-if="task.review_done"
         @click="completeTask('review')"
       >
@@ -83,7 +83,7 @@
 
     <template v-if="task.progress === 'done'">
       <v-btn
-        class="mr-2 primary"
+        class="mr-2 mb-2 primary"
         :to="{
           name: 'view',
           params: { task_id: task.id, entity_idx: 0 },
@@ -91,7 +91,9 @@
       >
         查看标注
       </v-btn>
-      <v-btn class="mr-2 secondary" @click="exporting = true"> 导出标注 </v-btn>
+      <v-btn class="mr-2 mb-2 secondary" @click="exporting = true">
+        导出标注
+      </v-btn>
     </template>
 
     <!-- Entities preview -->
