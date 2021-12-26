@@ -94,7 +94,7 @@ export default {
         width: w * this.width + 'px',
         top: this.top + y * this.height + 'px',
         height: h * this.height + 'px',
-        zIndex: 100 - Math.floor(w * h * 100),
+        zIndex: this.selected ? 101 : 100 - Math.floor(w * h * 100),
       }
     },
     upperLeftStyle() {
