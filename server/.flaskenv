@@ -1,2 +1,0 @@
-FLASK_APP=labelfun
-FLASK_ENV=development
