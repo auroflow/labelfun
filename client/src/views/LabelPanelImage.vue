@@ -488,7 +488,7 @@ export default {
   },
   mounted() {
     window.addEventListener('keyup', (event) => {
-      if (event.key === 'Delete') {
+      if (event.key === 'Delete' && this.chosenBox) {
         this.deleteBox(this.chosenBox)
       } else if (event.key === 'Enter') {
         this.showOverlay = false
