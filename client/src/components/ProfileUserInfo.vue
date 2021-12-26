@@ -8,7 +8,11 @@
             <v-col cols="3">用户名</v-col>
             <v-col v-if="!modify">{{ user.name }}</v-col>
             <v-col v-else>
-              <v-text-field dense v-model="local_user.name"></v-text-field>
+              <v-text-field
+                dense
+                v-model="local_user.name"
+                :rules="nameRules"
+              ></v-text-field>
             </v-col>
           </v-row>
           <v-row align="center">
@@ -111,7 +115,12 @@ export default {
         newPasswordConfirm: '',
       },
 
-      emailRules: [(v) => !v || validateEmail(v) || '请输入格式正确的邮箱。'],
+      nameRules: [(v) => !!v || '请输入名字。'],
+
+      emailRules: [
+        (v) => !!v || '请输入邮箱。',
+        (v) => validateEmail(v) || '请输入格式正确的邮箱。',
+      ],
 
       newPasswordRules: [
         (v) => !v || v.length >= 8 || '密码长度至少应为 8 位。',
