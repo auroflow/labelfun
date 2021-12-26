@@ -1,5 +1,20 @@
 <template>
   <v-app class="grey darken-2">
+    <v-fade-transition>
+      <v-overlay
+        class="text-center"
+        v-model="$vuetify.breakpoint.smAndDown"
+        z-index="10000"
+      >
+        <p class="text-body-1">请在电脑端操作或放大窗口</p>
+        <v-btn
+          class="success"
+          :to="{ name: 'task', params: { id: task_id.toString() } }"
+        >
+          返回
+        </v-btn>
+      </v-overlay>
+    </v-fade-transition>
     <the-message-bar></the-message-bar>
 
     <!-- Left nav -->
