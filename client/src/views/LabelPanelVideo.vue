@@ -232,7 +232,10 @@
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn
                       icon
-                      @click="startDrawing(object)"
+                      @click="
+                        chooseBox(index)
+                        startDrawing(object)
+                      "
                       v-bind="attrs"
                       v-on="on"
                       :disabled="canvasDrawing"
@@ -549,8 +552,7 @@ export default {
   },
   methods: {
     chooseBox(index) {
-      console.log('choosing', this.entity.annotation[index])
-      this.chosenObject = this.entity.annotation[index]
+      if (!this.canvasDrawing) this.chosenObject = this.entity.annotation[index]
     },
 
     unchooseBox() {
@@ -586,7 +588,7 @@ export default {
     },
 
     boxInThisFrame(object) {
-      return object.trajectory.find(
+      return object?.trajectory?.find(
         (snapshot) => snapshot.frame_number === this.current_frame
       )
     },
@@ -695,7 +697,12 @@ export default {
 
   mounted() {
     window.addEventListener('keyup', (event) => {
-      if (event.key === 'Delete' && this.entity.status !== 'done') {
+      if (
+        event.key === 'Delete' &&
+        this.entity.status !== 'done' &&
+        this.chosenObject
+      ) {
+        console.log('chosen:', this.chosenObject)
         if (this.boxInThisFrame(this.chosenObject)) {
           this.deleteBox(this.chosenObject)
         } else {
