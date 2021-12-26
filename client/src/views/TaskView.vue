@@ -415,7 +415,6 @@ export default {
           files: this.files,
         })
         .then(() => {
-          this.$store.dispatch('message/pushSuccess', '上传完成。')
           this.files = []
         })
     },
