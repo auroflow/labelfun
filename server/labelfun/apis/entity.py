@@ -14,7 +14,7 @@ from labelfun.models import UserType, JobStatus, TaskType
 from labelfun.models.task import Task, Entity
 from labelfun.schemas.task import GetTokenInSchema, GetTokenOutSchema, \
     EntityOutSchema, LabelInSchema, ReviewInSchema, EntityPatchSchema, \
-    TaskOutSummarySchema
+    TaskOutSchema
 
 entity_bp = APIBlueprint('entity', __name__)
 
@@ -205,7 +205,7 @@ class EntityView(MethodView):
         db.session.commit()
         return entity
 
-    @output(TaskOutSummarySchema)
+    @output(TaskOutSchema)
     @auth_required()
     def delete(self, entity_id):
         """Delete an entity."""
