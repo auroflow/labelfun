@@ -24,9 +24,9 @@ class BaseConfig:
 
 
 class DevelopmentConfig(BaseConfig):
-    DEV_SQLALCHEMY_DATABASE_URI = sqlite_prefix + \
-                                  'E:\\Users\\imbiansl\\Desktop\\labelfun\\database.db'
-    SQLALCHEMY_DATABASE_URI = os.getenv('LABELFUN_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = sqlite_prefix + \
+                              'E:\\Users\\imbiansl\\Desktop\\labelfun\\database.db'
+    # SQLALCHEMY_DATABASE_URI = os.getenv('LABELFUN_DATABASE_URL')
     INVITATION_CODE = '123456'
     INVITATION_CODE_ADMIN = 'abcdef'
     EXPORT_DIRECTORY = 'E:\\Users\\imbiansl\\Desktop\\export\\'
