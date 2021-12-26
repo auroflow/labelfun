@@ -176,25 +176,55 @@ export default {
       commit('UPLOAD_SET')
       return APIService.entitiesCreate(request_data)
         .then(({ data }) => {
-          console.log('here')
           commit('SET_TASK', data['task'])
           const creds = data['credentials']
+          let count = 0
+          let successCount = 0
           for (const cred of creds) {
             const file = files.find((file) => file.name === cred['path'])
             const observable = qiniu.upload(file, cred['key'], cred['token'])
             observable.subscribe({
               error: (res) => {
-                console.log(cred['path'], 'failed to uploaded as', cred['key'])
-                APIService.entityDelete(cred['key'])
+                count++
+                console.log(res.message)
                 dispatch(
                   'message/pushError',
                   {
-                    message: `上传 ${cred['path']} 失败：${res.message}`,
+                    message: `上传 ${cred['path']} 失败。`,
                   },
                   { root: true }
                 )
+                if (count === creds.length) {
+                  if (successCount) {
+                    dispatch(
+                      'message/pushSuccess',
+                      `${successCount} 个文件上传成功。`,
+                      {
+                        root: true,
+                      }
+                    )
+                  }
+                  commit('UPLOAD_CLEAR')
+                  commit('HIDE_ADD_ENTITIES')
+                }
+                APIService.entityDelete(cred['id']).then(({ data }) => {
+                  commit('SET_TASK', data)
+                })
               },
               complete: (res) => {
+                count++
+                successCount++
+                if (count === creds.length) {
+                  dispatch(
+                    'message/pushSuccess',
+                    `${successCount} 个文件上传成功。`,
+                    {
+                      root: true,
+                    }
+                  )
+                  commit('UPLOAD_CLEAR')
+                  commit('HIDE_ADD_ENTITIES')
+                }
                 APIService.entitiesPatch(
                   res.key,
                   res.duration,
@@ -205,9 +235,6 @@ export default {
               },
             })
           }
-          console.log('there')
-          commit('UPLOAD_CLEAR')
-          commit('HIDE_ADD_ENTITIES')
         })
         .catch((error) => dispatch('message/pushError', error, { root: true }))
     },
