@@ -115,16 +115,20 @@ export default {
         newPasswordConfirm: '',
       },
 
-      nameRules: [(v) => !!v || '请输入名字。'],
+      nameRules: [
+        (v) => !!v || '名字是必填项。',
+        (v) => v.length <= 120 || '名字过长。',
+      ],
 
       emailRules: [
-        (v) => !!v || '请输入邮箱。',
+        (v) => !!v || '邮箱是必填项。',
+        (v) => v.length <= 120 || '邮箱过长。',
         (v) => validateEmail(v) || '请输入格式正确的邮箱。',
       ],
 
       newPasswordRules: [
         (v) => !v || v.length >= 8 || '密码长度至少应为 8 位。',
-        (v) => !v || v.length <= 32 || '密码长度最多应为 32 位。',
+        (v) => !v || v.length <= 64 || '密码长度最多应为 64 位。',
         (v) =>
           !v ||
           (/[A-Za-z]/.test(v) &&
@@ -143,7 +147,7 @@ export default {
       oldPasswordRules: [
         (v) => !!v || '密码是必填项。',
         (v) => v.length >= 8 || '密码长度至少应为 8 位。',
-        (v) => v.length <= 32 || '密码长度最多应为 32 位。',
+        (v) => v.length <= 64 || '密码长度最多应为 64 位。',
       ],
 
       showOldPassword: false,
