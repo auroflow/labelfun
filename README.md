@@ -2,7 +2,7 @@
 
 Labelfun is a web tool for computer vision annotation. It supports creating datasets for image classification, image object detection and video object detection.
 
-![screenshot](assets\README\1.png)
+![screenshot](assets/README/1.png)
 
 On Labelfun, you can:
 
