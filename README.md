@@ -13,19 +13,6 @@ On Labelfun, you can:
 
 ## Development
 
-You need to provide the following environment variables in `server/.env` in the format of `KEY=value`:
-
-| Key                     | Usage                                                        |
-| ----------------------- | ------------------------------------------------------------ |
-| `QINIU_ACCESS_KEY`      | The access key of your [Qiniu Cloud](https://www.qiniu.com/) account |
-| `QINIU_SECRET_KEY`      | The secret key of your [Qiniu Cloud](https://www.qiniu.com/) account |
-| `QINIU_BUCKET_DOMAIN`   | The domain name for you Qiniu Object Storage bucket          |
-| `QINIU_BUCKET_NAME`     | The name of you Qiniu Object Storage bucket                  |
-| `INVITATION_CODE`       | The code required for registering an account                 |
-| `INVITATION_CODE_ADMIN` | The code required for registering an admin account           |
-| `EXPORT_DIRECTORY`      | Directory where exported zip files are saved on the server   |
-| `LABELFUN_DATABASE_URL` | The MySQL database URL (use `mysqldb`)                       |
-
 ### Server
 
 1. Create `server/.flaskenv` with the following content:
@@ -35,7 +22,20 @@ You need to provide the following environment variables in `server/.env` in the 
     FLASK_ENV=development
     ```
 
-2. Execute the following:
+2. Provide the following environment variables in `server/.env` in the format of `KEY=value`:
+
+    | Key                     | Usage                                                        |
+    | ----------------------- | ------------------------------------------------------------ |
+    | `QINIU_ACCESS_KEY`      | The access key of your [Qiniu Cloud](https://www.qiniu.com/) account |
+    | `QINIU_SECRET_KEY`      | The secret key of your [Qiniu Cloud](https://www.qiniu.com/) account |
+    | `QINIU_BUCKET_DOMAIN`   | The domain name for you Qiniu Object Storage bucket          |
+    | `QINIU_BUCKET_NAME`     | The name of you Qiniu Object Storage bucket                  |
+    | `INVITATION_CODE`       | The invitation code for a new account                        |
+    | `INVITATION_CODE_ADMIN` | The invitation code for an admin account                     |
+    | `EXPORT_DIRECTORY`      | Directory where exported zip files are saved on the server   |
+    | `LABELFUN_DATABASE_URL` | The MySQL database URL (use `mysqldb`)                       |
+
+3. Execute the following under `server/`:
 
     ```bash
     $ python -m venv env
@@ -50,8 +50,17 @@ You need to provide the following environment variables in `server/.env` in the 
 
 ### Client
 
-```bash
-npm install
-npm run serve
-```
+1. Provide the following environment variables in `client/.env` or `client/.env.development` or `client/.env.production`:
+
+   | Key           | Usage |
+   | ------------- | ----- |
+   | `VUE_APP_API` | Where API requests are sent |
+   | `VUE_APP_QINIU_BUCKET_DOMAIN` | The domain name for you Qiniu Object Storage bucket |
+
+2. Execute the following under `client/`:
+
+    ```bash
+    npm install
+    npm run serve
+    ```
 
