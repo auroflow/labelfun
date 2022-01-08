@@ -6,7 +6,7 @@ Labelfun is a web tool for computer vision annotation. It supports creating data
 
 On Labelfun, you can:
 
-- Upload image or videos and create an annotation task
+- Upload image or videos and create annotation tasks
 - Label images and videos right in your browser
 - Review new annotations
 - Download annotations
@@ -15,27 +15,27 @@ On Labelfun, you can:
 
 ### Server
 
-1. Create `server/.flaskenv` with the following content:
+1. Create `server/.flaskenv` with the content below:
 
     ```
     FLASK_APP=labelfun
     FLASK_ENV=development
     ```
 
-2. Provide the following environment variables in `server/.env` in the format of `KEY=value`:
+2. Provide these environment variables in `server/.env` in the format of `KEY=value`:
 
     | Key                     | Usage                                                        |
     | ----------------------- | ------------------------------------------------------------ |
     | `QINIU_ACCESS_KEY`      | The access key of your [Qiniu Cloud](https://www.qiniu.com/) account |
     | `QINIU_SECRET_KEY`      | The secret key of your [Qiniu Cloud](https://www.qiniu.com/) account |
     | `QINIU_BUCKET_DOMAIN`   | The domain name for you Qiniu Object Storage bucket          |
-    | `QINIU_BUCKET_NAME`     | The name of you Qiniu Object Storage bucket                  |
+    | `QINIU_BUCKET_NAME`     | The name of your Qiniu Object Storage bucket                 |
     | `INVITATION_CODE`       | The invitation code for a new account                        |
     | `INVITATION_CODE_ADMIN` | The invitation code for an admin account                     |
-    | `EXPORT_DIRECTORY`      | Directory where exported zip files are saved on the server   |
+    | `EXPORT_DIRECTORY`      | Where exported zip files are saved on the server             |
     | `LABELFUN_DATABASE_URL` | The MySQL database URL (use `mysqldb`)                       |
 
-3. Execute the following under `server/`:
+3. Under `server/`:
 
     ```bash
     $ python -m venv env
@@ -50,14 +50,14 @@ On Labelfun, you can:
 
 ### Client
 
-1. Provide the following environment variables in `client/.env` or `client/.env.development` or `client/.env.production`:
+1. Provide these environment variables in `client/.env` or `client/.env.development` or `client/.env.production`:
 
    | Key           | Usage |
    | ------------- | ----- |
    | `VUE_APP_API` | Where API requests are sent |
    | `VUE_APP_QINIU_BUCKET_DOMAIN` | The domain name for you Qiniu Object Storage bucket |
 
-2. Execute the following under `client/`:
+2. Under `client/`:
 
     ```bash
     npm install
